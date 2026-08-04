@@ -21,6 +21,18 @@ CREATE TABLE IF NOT EXISTS categories (
     name TEXT NOT NULL UNIQUE
 );
 
+INSERT OR IGNORE INTO categories (name) VALUES
+    ('RPG'),
+    ('Shooter'),
+    ('Indie'),
+    ('Strategy'),
+    ('Adventure'),
+    ('Sports'),
+    ('Simulation'),
+    ('Horror'),
+    ('Multiplayer'),
+    ('Retro');
+
 CREATE TABLE IF NOT EXISTS posts (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER NOT NULL,
