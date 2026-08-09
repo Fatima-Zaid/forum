@@ -13,5 +13,5 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	authRenderTemplate(w, "index.html", pageData{Title: "Home", User: user})
+	renderTemplate(w, "index.html", pageData{Title: "Home", User: user})
 }

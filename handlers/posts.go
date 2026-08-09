@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -15,6 +14,7 @@ import (
 
 	"forum/database"
 	"forum/models"
+	"forum/utils"
 )
 
 // IndexPageData is what index.html renders: the post list plus enough
@@ -26,6 +26,7 @@ type IndexPageData struct {
 	IsLoggedIn     bool
 	ActiveFilter   string // "", "created", "liked"
 	ActiveCategory int    // 0 means none selected
+	User           *models.User // layout.html reads {{.User}} on every page
 }
 
 // PostPageData is what post.html renders: one post plus its comments.
@@ -36,12 +37,14 @@ type PostPageData struct {
 	Comments      []models.Comment
 	IsLoggedIn    bool
 	CurrentUserID int
+	User          *models.User // layout.html reads {{.User}} on every page
 }
 
 type EditPostPageData struct {
 	Post       *models.Post
 	Categories []models.Category
 	IsLoggedIn bool
+	User       *models.User // layout.html reads {{.User}} on every page
 }
 
 // EditPostHandler handles both GET /posts/{id}/edit (show the form) and
@@ -85,10 +88,12 @@ func EditPostHandler(db *sql.DB) http.HandlerFunc {
 				http.Error(w, "could not load categories", http.StatusInternalServerError)
 				return
 			}
+			currentUser, _ := utils.GetUserFromSession(r)
 			renderTemplate(w, "edit.html", EditPostPageData{
 				Post:       post,
 				Categories: categories,
 				IsLoggedIn: true,
+				User:       currentUser,
 			})
 
 		case http.MethodPost:
@@ -346,12 +351,14 @@ func ListPostsHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		userID, isLoggedIn := currentUserID(db, r)
+		currentUser, _ := utils.GetUserFromSession(r)
 		filter := r.URL.Query().Get("filter") // "created" or "liked"
 		categoryParam := r.URL.Query().Get("category")
 
 		data := IndexPageData{
 			Categories: categories,
 			IsLoggedIn: isLoggedIn,
+			User:       currentUser,
 		}
 
 		switch {
@@ -438,35 +445,14 @@ func GetPostHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		currentUID, isLoggedIn := currentUserID(db, r)
+		currentUser, _ := utils.GetUserFromSession(r)
 
 		renderTemplate(w, "post.html", PostPageData{
 			Post:          post,
 			Comments:      comments,
 			IsLoggedIn:    isLoggedIn,
 			CurrentUserID: currentUID,
+			User:          currentUser,
 		})
-	}
-}
-
-// --- rendering helpers ---
-// Minimal html/template wiring so this file runs standalone. If you already
-// have a shared render helper elsewhere (e.g. in main.go), delete these two
-// functions and call your existing one instead.
-
-func renderTemplate(w http.ResponseWriter, name string, data any) {
-	tmpl, err := template.ParseFiles(
-		"templates/layout.html",
-		"templates/"+name,
-		"templates/partials/nav.html",
-		"templates/partials/comment.html",
-	)
-	if err != nil {
-		log.Println("template parse error:", err)
-		http.Error(w, "template error", http.StatusInternalServerError)
-		return
-	}
-	if err := tmpl.ExecuteTemplate(w, "layout", data); err != nil {
-		log.Println("template execute error:", err)
-		http.Error(w, "render error", http.StatusInternalServerError)
 	}
 }
