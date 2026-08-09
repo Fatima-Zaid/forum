@@ -1,0 +1,18 @@
+{{define "nav"}}
+<nav class="navbar">
+    <a href="/" class="brand">Game Reviews Forum</a>
+    <div class="nav-links">
+        {{if .IsLoggedIn}}
+            <a href="/#new-post">New Post</a>
+            <a href="/?filter=created">My Posts</a>
+            <a href="/?filter=liked">Liked Posts</a>
+            <form action="/logout" method="post" class="inline-form">
+                <button type="submit">Logout</button>
+            </form>
+        {{else}}
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+        {{end}}
+    </div>
+</nav>
+{{end}}

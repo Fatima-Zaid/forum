@@ -1,0 +1,66 @@
+{{define "content"}}
+
+{{if .IsLoggedIn}}
+<section id="new-post" class="new-post-form">
+    <h2>Create a Post</h2>
+    <form action="/posts" method="post">
+        <label>Title
+            <input type="text" name="title" required>
+        </label>
+        <label>Game Title
+            <input type="text" name="game_title">
+        </label>
+        <label>Content
+            <textarea name="content" required></textarea>
+        </label>
+        <fieldset>
+            <legend>Categories</legend>
+            {{range .Categories}}
+            <label class="category-check">
+                <input type="checkbox" name="category_ids" value="{{.ID}}">
+                {{.Name}}
+            </label>
+            {{end}}
+        </fieldset>
+        <label>New category (comma-separated, optional)
+            <input type="text" name="new_categories" placeholder="e.g. Roguelike, Metroidvania">
+        </label>
+        <button type="submit">Post</button>
+    </form>
+</section>
+{{end}}
+
+<section class="filters">
+    <a href="/" {{if and (eq .ActiveFilter "") (eq .ActiveCategory 0)}}class="active"{{end}}>All Posts</a>
+    {{if .IsLoggedIn}}
+        <a href="/?filter=created" {{if eq .ActiveFilter "created"}}class="active"{{end}}>My Posts</a>
+        <a href="/?filter=liked" {{if eq .ActiveFilter "liked"}}class="active"{{end}}>Liked Posts</a>
+    {{end}}
+    <span class="category-filters">
+        {{range .Categories}}
+        <a href="/?category={{.ID}}" {{if eq $.ActiveCategory .ID}}class="active"{{end}}>{{.Name}}</a>
+        {{end}}
+    </span>
+</section>
+
+<section class="post-list">
+    {{if not .Posts}}
+        <p>No posts here yet.</p>
+    {{end}}
+    {{range .Posts}}
+    <article class="post-card">
+        <h3><a href="/posts/{{.ID}}">{{.Title}}</a></h3>
+        {{if .GameTitle}}<p class="game-title">{{.GameTitle}}</p>{{end}}
+        <p class="meta">by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}</p>
+        <p class="excerpt">{{.Content}}</p>
+        <p class="tags">
+            {{range .Categories}}<span class="tag">{{.Name}}</span>{{end}}
+        </p>
+        <p class="reactions">
+            👍 {{.LikeCount}} · 👎 {{.DislikeCount}} · 💬 {{.CommentCount}}
+        </p>
+    </article>
+    {{end}}
+</section>
+
+{{end}}
