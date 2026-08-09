@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -40,6 +41,10 @@ func InitDB(dbPath string) (*sql.DB, error) {
 
 	if _, err := db.Exec(schemaSQL); err != nil {
 		return nil, fmt.Errorf("apply schema: %w", err)
+	}
+
+	if _, err := db.Exec(`ALTER TABLE posts ADD COLUMN updated_at DATETIME`); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+		return nil, fmt.Errorf("migrate posts.updated_at: %w", err)
 	}
 
 	DB = db

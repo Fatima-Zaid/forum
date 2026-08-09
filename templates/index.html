@@ -3,7 +3,7 @@
 {{if .IsLoggedIn}}
 <section id="new-post" class="new-post-form">
     <h2>Create a Post</h2>
-    <form action="/posts" method="post">
+    <form action="/posts" method="post" enctype="multipart/form-data">
         <label>Title
             <input type="text" name="title" required>
         </label>
@@ -12,6 +12,9 @@
         </label>
         <label>Content
             <textarea name="content" required></textarea>
+        </label>
+        <label>Image (optional)
+            <input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp">
         </label>
         <fieldset>
             <legend>Categories</legend>
@@ -51,8 +54,11 @@
     <article class="post-card">
         <h3><a href="/posts/{{.ID}}">{{.Title}}</a></h3>
         {{if .GameTitle}}<p class="game-title">{{.GameTitle}}</p>{{end}}
-        <p class="meta">by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}</p>
-        <p class="excerpt">{{.Content}}</p>
+        {{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Title}}" class="post-thumb">{{end}}
+<p class="meta">
+    by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
+    {{if .IsEdited}} · <span class="edited-badge">(edited)</span>{{end}}
+</p>        <p class="excerpt">{{.Content}}</p>
         <p class="tags">
             {{range .Categories}}<span class="tag">{{.Name}}</span>{{end}}
         </p>

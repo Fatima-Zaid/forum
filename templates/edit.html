@@ -1,0 +1,33 @@
+{{define "content"}}
+<section class="edit-post-form">
+    <h2>Edit Post</h2>
+    <form action="/posts/{{.Post.ID}}/edit" method="post" enctype="multipart/form-data">
+        <label>Title
+            <input type="text" name="title" value="{{.Post.Title}}" required>
+        </label>
+        <label>Game Title
+            <input type="text" name="game_title" value="{{.Post.GameTitle}}">
+        </label>
+        <label>Content
+            <textarea name="content" required>{{.Post.Content}}</textarea>
+        </label>
+        <label>Replace Image (optional)
+            <input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp">
+        </label>
+        {{if .Post.ImageURL}}<p>Current image: <img src="{{.Post.ImageURL}}" class="post-thumb"></p>{{end}}
+        <fieldset>
+            <legend>Categories</legend>
+            {{range .Categories}}
+            <label class="category-check">
+                <input type="checkbox" name="category_ids" value="{{.ID}}" {{if $.Post.HasCategory .ID}}checked{{end}}>
+                {{.Name}}
+            </label>
+            {{end}}
+        </fieldset>
+        <label>New category (comma-separated, optional)
+            <input type="text" name="new_categories" placeholder="e.g. Roguelike, Metroidvania">
+        </label>
+        <button type="submit">Save Changes</button>
+    </form>
+</section>
+{{end}}

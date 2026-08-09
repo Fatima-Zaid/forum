@@ -1,0 +1,15 @@
+{{define "comment"}}
+<div class="comment">
+    <p class="meta"><strong>{{.Username}}</strong> · {{.CreatedAt.Format "Jan 2, 2006 15:04"}}</p>
+    <p class="content">{{.Content}}</p>
+    {{if .MediaURL}}<img src="{{.MediaURL}}" alt="attached media" class="comment-media">{{end}}
+    <p class="reactions">👍 {{.LikeCount}} · 👎 {{.DislikeCount}}</p>
+    {{if .Replies}}
+    <div class="replies">
+        {{range .Replies}}
+            {{template "comment" .}}
+        {{end}}
+    </div>
+    {{end}}
+</div>
+{{end}}
