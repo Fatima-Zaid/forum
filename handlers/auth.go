@@ -23,7 +23,7 @@ type pageData struct {
 	User  *models.User
 }
 
-func renderTemplate(w http.ResponseWriter, page string, data pageData) {
+func authRenderTemplate(w http.ResponseWriter, page string, data pageData) {
 	tmpl, err := template.ParseFiles(templatesDir+"layout.html", templatesDir+page)
 	if err != nil {
 		log.Println("template parse error:", err)
@@ -43,7 +43,7 @@ func RegisterPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	renderTemplate(w, "register.html", pageData{Title: "Register"})
+	authRenderTemplate(w, "register.html", pageData{Title: "Register"})
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +54,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		renderTemplate(w, "register.html", pageData{Title: "Register", Error: "Invalid form submission"})
+		authRenderTemplate(w, "register.html", pageData{Title: "Register", Error: "Invalid form submission"})
 		return
 	}
 
@@ -64,17 +64,17 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	if email == "" || username == "" || password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		renderTemplate(w, "register.html", pageData{Title: "Register", Error: "All fields are required"})
+		authRenderTemplate(w, "register.html", pageData{Title: "Register", Error: "All fields are required"})
 		return
 	}
 	if _, err := mail.ParseAddress(email); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		renderTemplate(w, "register.html", pageData{Title: "Register", Error: "Invalid email address"})
+		authRenderTemplate(w, "register.html", pageData{Title: "Register", Error: "Invalid email address"})
 		return
 	}
 	if len(password) < 8 {
 		w.WriteHeader(http.StatusBadRequest)
-		renderTemplate(w, "register.html", pageData{Title: "Register", Error: "Password must be at least 8 characters"})
+		authRenderTemplate(w, "register.html", pageData{Title: "Register", Error: "Password must be at least 8 characters"})
 		return
 	}
 
@@ -87,7 +87,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if exists > 0 {
 		w.WriteHeader(http.StatusConflict)
-		renderTemplate(w, "register.html", pageData{Title: "Register", Error: "Email is already registered"})
+		authRenderTemplate(w, "register.html", pageData{Title: "Register", Error: "Email is already registered"})
 		return
 	}
 
@@ -133,7 +133,7 @@ func LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	renderTemplate(w, "login.html", pageData{Title: "Login"})
+	authRenderTemplate(w, "login.html", pageData{Title: "Login"})
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -144,7 +144,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		renderTemplate(w, "login.html", pageData{Title: "Login", Error: "Invalid form submission"})
+		authRenderTemplate(w, "login.html", pageData{Title: "Login", Error: "Invalid form submission"})
 		return
 	}
 
@@ -153,7 +153,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if email == "" || password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		renderTemplate(w, "login.html", pageData{Title: "Login", Error: "Email and password are required"})
+		authRenderTemplate(w, "login.html", pageData{Title: "Login", Error: "Email and password are required"})
 		return
 	}
 
@@ -169,13 +169,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// Deliberately vague: don't reveal whether the email exists.
 		w.WriteHeader(http.StatusUnauthorized)
-		renderTemplate(w, "login.html", pageData{Title: "Login", Error: "Incorrect email or password"})
+		authRenderTemplate(w, "login.html", pageData{Title: "Login", Error: "Incorrect email or password"})
 		return
 	}
 
 	if !utils.CheckPasswordHash(password, user.PasswordHash) {
 		w.WriteHeader(http.StatusUnauthorized)
-		renderTemplate(w, "login.html", pageData{Title: "Login", Error: "Incorrect email or password"})
+		authRenderTemplate(w, "login.html", pageData{Title: "Login", Error: "Incorrect email or password"})
 		return
 	}
 
