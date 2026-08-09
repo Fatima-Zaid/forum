@@ -21,13 +21,27 @@ CREATE TABLE IF NOT EXISTS categories (
     name TEXT NOT NULL UNIQUE
 );
 
+INSERT OR IGNORE INTO categories (name) VALUES
+    ('RPG'),
+    ('Shooter'),
+    ('Indie'), 
+    ('Strategy'),
+    ('Adventure'),
+    ('Sports'),
+    ('Simulation'),
+    ('Horror'),
+    ('Multiplayer'),
+    ('Retro');
+
 CREATE TABLE IF NOT EXISTS posts (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER NOT NULL,
     title      TEXT    NOT NULL,
     game_title TEXT,
     content    TEXT    NOT NULL,
+    image_url  TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
