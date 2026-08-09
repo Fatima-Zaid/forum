@@ -1,0 +1,12 @@
+{{define "content"}}
+<h1>Welcome to the Forum</h1>
+
+{{if .User}}
+    <p>You are logged in as <strong>{{.User.Username}}</strong>. You can now create posts and comments.</p>
+{{else}}
+    <p>Please <a href="/login">login</a> or <a href="/register">register</a> to create posts and comments.
+       You can still browse everything below.</p>
+{{end}}
+
+<!-- Posts list goes here once that part of the project is wired up -->
+{{end}}

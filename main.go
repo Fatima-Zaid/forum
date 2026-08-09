@@ -5,17 +5,19 @@ import (
 	"net/http"
 
 	"forum/database"
+	"forum/routes"
 )
 
 func main() {
-	db, err := database.InitDB("./forum.db")
+	_, err := database.InitDB("./forum.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer database.Close()
 
-	_ = db 
+	mux := http.NewServeMux()
+	routes.RegisterRoutes(mux)
 
 	log.Println("listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }

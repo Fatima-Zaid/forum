@@ -1,0 +1,302 @@
+/* ============================================================
+   FORUM — Retro Desktop / Dialog-Box Theme
+   Soft monochromatic lavender-purple, warm cream sparkle accent,
+   classic Windows-98-style bevels on buttons and inputs.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+:root {
+  --bg-grid: #a99ee0;       /* checkered page background */
+  --bg-line: #8f7fd9;       /* grid lines */
+
+  --titlebar-1: #8b5cf6;    /* title bar gradient start */
+  --titlebar-2: #6d28d9;    /* title bar gradient end */
+
+  --panel: #e9ddfd;         /* dialog body background */
+  --panel-deep: #6b46c1;    /* sunken input border tone */
+
+  --ink: #2e1065;           /* deep violet — text, borders */
+  --text-light: #f5eeff;    /* text on dark title bars */
+  --text-dim: #5b3f9e;      /* secondary text on light panel */
+
+  --yellow: #ffcc33;         
+  --button: #8b6dd9;        /* button fill */
+  --button-hover: #7c5cd6;
+
+  --rose: #e0708a;          /* errors — soft, stays in the pastel family */
+
+  --font-display: 'Press Start 2P', monospace;
+  --font-body: 'VT323', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: var(--bg-grid);
+  background-image:
+    linear-gradient(var(--bg-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  font-family: var(--font-body);
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.4;
+  overflow-x: hidden;
+}
+
+/* ambient decorative sparkles, nodding to the reference art */
+body::before,
+body::after {
+  content: '\2726';
+  position: fixed;
+  color: #f3dfb8;
+  font-size: 48px;
+  opacity: 0.55;
+  pointer-events: none;
+  text-shadow: 0 0 12px rgba(243, 223, 184, 0.5);
+}
+
+body::before {
+  top: 8%;
+  right: 6%;
+}
+
+body::after {
+  bottom: 10%;
+  left: 5%;
+  font-size: 32px;
+}
+
+/* ---------- Header / Nav (styled like a title bar) ---------- */
+
+header {
+  background: linear-gradient(90deg, var(--titlebar-1), var(--titlebar-2));
+  border-bottom: 3px solid var(--ink);
+}
+
+nav {
+  width: 100%;
+  padding: 16px 48px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+nav a {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-light);
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+nav a:first-child {
+  margin-right: auto;
+  font-size: 13px;
+}
+
+nav a:hover {
+  color: #f3dfb8;
+}
+
+nav span {
+  font-family: var(--font-body);
+  font-size: 20px;
+  color: var(--text-light);
+}
+
+nav form {
+  margin: 0;
+}
+
+/* ---------- Layout ---------- */
+
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* title bar merged with the dialog body below it */
+h1 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text-light);
+  margin: 0;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, var(--titlebar-1), var(--titlebar-2));
+  border: 3px solid var(--ink);
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+h1::after {
+  content: '\2013  \25A1  \2715';
+  letter-spacing: 4px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* ---------- Dialog body (form) ---------- */
+
+main form {
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 8px 8px 18px rgba(46, 16, 101, 0.3);
+}
+
+main label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+main label::before {
+  content: '\2726';
+  font-family: var(--font-body); /* Press Start 2P lacks this glyph — VT323 has it */
+  font-size: 16px;
+  color: var(--yellow);
+  text-shadow: 0 0 10px rgba(255, 204, 51, 0.9), 0 0 3px rgba(255, 204, 51, 1);
+}
+
+main input {
+  font-family: var(--font-body);
+  font-size: 20px;
+  padding: 9px 12px;
+  border: 3px inset var(--panel-deep);
+  background: #ffffff;
+  color: var(--ink);
+  outline: none;
+}
+
+main input:focus {
+  border-color: var(--button);
+  box-shadow: 0 0 0 3px rgba(139, 109, 217, 0.35);
+}
+
+main button {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: #ffffff;
+  background: var(--button);
+  border: 3px outset var(--button);
+  padding: 12px 16px;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+main button:hover {
+  background: var(--button-hover);
+}
+
+main button:active {
+  border-style: inset;
+}
+
+/* ---------- Nav logout button (plain, matches nav links) ---------- */
+
+nav button {
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: var(--text-light);
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+nav button:hover {
+  color: #f3dfb8;
+}
+
+/* ---------- Feedback ---------- */
+
+.error {
+  font-family: var(--font-body);
+  font-size: 18px;
+  background: var(--rose);
+  color: #fff;
+  border: 3px solid var(--ink);
+  padding: 10px 12px;
+  margin: 0 0 4px;
+}
+
+.error::before {
+  content: '\26A0 ';
+}
+
+/* ---------- Links inside content ---------- */
+
+main p {
+  font-size: 20px;
+  margin-top: 20px;
+  color: var(--ink);
+}
+
+main p a {
+  color: var(--button);
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+}
+
+main p a:hover {
+  color: var(--titlebar-2);
+}
+
+main strong {
+  color: var(--titlebar-2);
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 480px) {
+  nav {
+    padding: 14px 20px;
+  }
+  h1 {
+    font-size: 11px;
+    padding: 10px 12px;
+  }
+  form {
+    padding: 18px 16px;
+  }
+  body::before,
+  body::after {
+    display: none;
+  }
+}
