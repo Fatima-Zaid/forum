@@ -3,14 +3,14 @@ package models
 import "time"
 
 type Post struct {
-	ID        int       `json:"id"`
-	UserID    int       `json:"user_id"`
-	Title     string    `json:"title"`
-	GameTitle string    `json:"game_title"`
-	Content   string    `json:"content"`
-	ImageURL  string    `json:"image_url,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	ID        int        `json:"id"`
+	UserID    int        `json:"user_id"`
+	Title     string     `json:"title"`
+	GameTitle string     `json:"game_title"`
+	Content   string     `json:"content"`
+	ImageURL  string     `json:"image_url,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"` // nil = never edited
 
 	Username     string     `json:"username,omitempty"`
 	Categories   []Category `json:"categories,omitempty"`
@@ -20,13 +20,15 @@ type Post struct {
 	CommentCount int        `json:"comment_count,omitempty"`
 }
 
-
-func (p *Post) IsEdited() bool {
+// IsEdited reports whether the post has been edited since creation.
+// Templates call this directly: {{if .IsEdited}}.
+func (p Post) IsEdited() bool {
 	return p.UpdatedAt != nil
 }
 
-
-func (p *Post) HasCategory(id int) bool {
+// HasCategory reports whether the post is tagged with the given category id.
+// Used by the edit form to pre-check the right boxes: {{if .HasCategory 3}}.
+func (p Post) HasCategory(id int) bool {
 	for _, c := range p.Categories {
 		if c.ID == id {
 			return true

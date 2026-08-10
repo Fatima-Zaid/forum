@@ -8,71 +8,124 @@ import (
 	"forum/handlers"
 )
 
-// RegisterRoutes wires up every route in the app onto mux. db is needed
-// here (not just in main) because the posts/reactions handlers are
-// constructed as closures over it (e.g. handlers.ListPostsHandler(db)).
+// RegisterRoutes wires up every route in the application.
 func RegisterRoutes(mux *http.ServeMux, db *sql.DB) {
-	// static files (css, js, uploaded images) served from ./static
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	// posts own "/" now: it lists posts and handles the category/created/liked
-	// filters required by the spec. The old plain-welcome homeHandler is gone —
-	// heads up to your friend since this route used to be hers.
+	// Static files
+	mux.Handle(
+		"/static/",
+		http.StripPrefix(
+			"/static/",
+			http.FileServer(http.Dir("static")),
+		),
+	)
+
+	// IMPORTANT:
+	// "/" is the catch-all route in net/http ServeMux.
+	//
+	// Therefore requests such as:
+	//   /does-not-exist
+	//   /hello
+	//   /abc/xyz
+	//
+	// will reach ListPostsHandler, which checks the path
+	// and renders our custom 404 page.
 	mux.HandleFunc("/", handlers.ListPostsHandler(db))
+
+	// Create post
 	mux.HandleFunc("/posts", handlers.CreatePostHandler(db))
+
+	// Everything under /posts/
 	mux.HandleFunc("/posts/", postsSubrouter(db))
 
-	// auth routes
+	// Authentication
 	mux.HandleFunc("/register", registerRouter)
 	mux.HandleFunc("/login", loginRouter)
 	mux.HandleFunc("/logout", handlers.LogoutHandler)
 }
 
-// postsSubrouter dispatches everything under /posts/{id} since the stdlib
-// mux here doesn't do path-parameter matching. Routes on suffix:
-//
-//	GET  /posts/{id}          -> view post
-//	GET+POST /posts/{id}/edit -> edit post (form + save)
-//	POST /posts/{id}/react    -> like/dislike
-//	POST /posts/{id}/delete   -> delete post
-//	POST /posts/{id}/comments -> add comment (wire up once your comment
-//	                             handler exists — see TODO below)
+// postsSubrouter dispatches everything under /posts/.
 func postsSubrouter(db *sql.DB) http.HandlerFunc {
+
 	viewPost := handlers.GetPostHandler(db)
 	editPost := handlers.EditPostHandler(db)
 	react := handlers.ReactToPostHandler(db)
 	deletePost := handlers.DeletePostHandler(db)
+	newPostPage := handlers.NewPostPageHandler(db)
 
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		switch {
+
+		// GET /posts/new
+		case r.URL.Path == "/posts/new":
+			newPostPage(w, r)
+			return
+
+		// /posts/{id}/edit
 		case strings.HasSuffix(r.URL.Path, "/edit"):
 			editPost(w, r)
+			return
+
+		// /posts/{id}/react
 		case strings.HasSuffix(r.URL.Path, "/react"):
 			react(w, r)
+			return
+
+		// /posts/{id}/delete
 		case strings.HasSuffix(r.URL.Path, "/delete"):
 			deletePost(w, r)
+			return
+
+		// /posts/{id}/comments
 		case strings.HasSuffix(r.URL.Path, "/comments"):
-			// TODO: swap in your comment handler once it exists, e.g.
-			// handlers.CreateCommentHandler(db)(w, r)
-			http.Error(w, "comments not implemented yet", http.StatusNotImplemented)
+			http.Error(
+				w,
+				"comments not implemented yet",
+				http.StatusNotImplemented,
+			)
+			return
+
+		// Everything else under /posts/
 		default:
 			viewPost(w, r)
+			return
 		}
 	}
 }
 
 func registerRouter(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		handlers.RegisterPageHandler(w, r)
-		return
+
+	case http.MethodPost:
+		handlers.RegisterHandler(w, r)
+
+	default:
+		handlers.RenderError(
+			w,
+			r,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+		)
 	}
-	handlers.RegisterHandler(w, r)
 }
 
 func loginRouter(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
 		handlers.LoginPageHandler(w, r)
-		return
+
+	case http.MethodPost:
+		handlers.LoginHandler(w, r)
+
+	default:
+		handlers.RenderError(
+			w,
+			r,
+			http.StatusMethodNotAllowed,
+			"Method Not Allowed",
+		)
 	}
-	handlers.LoginHandler(w, r)
 }

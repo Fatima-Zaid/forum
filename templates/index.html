@@ -1,35 +1,8 @@
 {{define "content"}}
 
 {{if .IsLoggedIn}}
-<section id="new-post" class="new-post-form">
-    <h2>Create a Post</h2>
-    <form action="/posts" method="post" enctype="multipart/form-data">
-        <label>Title
-            <input type="text" name="title" required>
-        </label>
-        <label>Game Title
-            <input type="text" name="game_title">
-        </label>
-        <label>Content
-            <textarea name="content" required></textarea>
-        </label>
-        <label>Image (optional)
-            <input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp">
-        </label>
-        <fieldset>
-            <legend>Categories</legend>
-            {{range .Categories}}
-            <label class="category-check">
-                <input type="checkbox" name="category_ids" value="{{.ID}}">
-                {{.Name}}
-            </label>
-            {{end}}
-        </fieldset>
-        <label>New category (comma-separated, optional)
-            <input type="text" name="new_categories" placeholder="e.g. Roguelike, Metroidvania">
-        </label>
-        <button type="submit">Post</button>
-    </form>
+<section class="new-post-cta">
+    <a href="/posts/new" class="btn btn-primary">Create / Add Post</a>
 </section>
 {{end}}
 
@@ -51,21 +24,36 @@
         <p>No posts here yet.</p>
     {{end}}
     {{range .Posts}}
-    <article class="post-card">
-        <h3><a href="/posts/{{.ID}}">{{.Title}}</a></h3>
-        {{if .GameTitle}}<p class="game-title">{{.GameTitle}}</p>{{end}}
-        {{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Title}}" class="post-thumb">{{end}}
-<p class="meta">
-    by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
-    {{if .IsEdited}} · <span class="edited-badge">(edited)</span>{{end}}
-</p>        <p class="excerpt">{{.Content}}</p>
-        <p class="tags">
-            {{range .Categories}}<span class="tag">{{.Name}}</span>{{end}}
-        </p>
-        <p class="reactions">
-            👍 {{.LikeCount}} · 👎 {{.DislikeCount}} · 💬 {{.CommentCount}}
-        </p>
-    </article>
+<a href="/posts/{{.ID}}" class="post-card">
+    <h3>{{.Title}}</h3>
+
+    {{if .GameTitle}}
+        <p class="game-title">{{.GameTitle}}</p>
+    {{end}}
+
+    {{if .ImageURL}}
+        <img src="{{.ImageURL}}" alt="{{.Title}}" class="post-thumb">
+    {{end}}
+
+    <p class="meta">
+        by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
+        {{if .IsEdited}}
+            · <span class="edited-badge">(edited)</span>
+        {{end}}
+    </p>
+
+    <p class="excerpt">{{.Content}}</p>
+
+    <p class="tags">
+        {{range .Categories}}
+            <span class="tag">{{.Name}}</span>
+        {{end}}
+    </p>
+
+    <p class="reactions">
+        👍 {{.LikeCount}} · 👎 {{.DislikeCount}} · 💬 {{.CommentCount}}
+    </p>
+</a>
     {{end}}
 </section>
 

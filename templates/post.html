@@ -3,12 +3,11 @@
 <article class="post-detail">
     <h1>{{.Title}}</h1>
     {{if .GameTitle}}<p class="game-title">{{.GameTitle}}</p>{{end}}
-    <p class="meta">by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}</p>
     <p class="meta">
-    by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
-    {{if .IsEdited}} · <span class="edited-badge">(edited)</span>{{end}}
+        by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
+        {{if .IsEdited}} · <span class="edited-badge">(edited)</span>{{end}}
     </p>
-    
+
     <p class="tags">
         {{range .Categories}}<span class="tag">{{.Name}}</span>{{end}}
     </p>
@@ -31,13 +30,27 @@
     </div>
 
     {{if eq $.CurrentUserID .UserID}}
-<a href="/posts/{{.ID}}/edit" class="edit-btn">Edit Post</a>
-<form action="/posts/{{.ID}}/delete" method="post"
-      onsubmit="return confirm('Delete this post? This cannot be undone.');">
-    <button type="submit" class="delete-btn">Delete Post</button>
-</form>
-{{end}}
+    <a href="/posts/{{.ID}}/edit" class="edit-btn">Edit Post</a>
+    <form id="delete-post-form" action="/posts/{{.ID}}/delete" method="post">
+        <button type="submit" class="delete-btn" data-confirm-delete>Delete Post</button>
+    </form>
+    {{end}}
 </article>
+
+{{if eq $.CurrentUserID .UserID}}
+<div id="delete-modal" class="modal-overlay" hidden>
+    <div class="modal">
+        <h3>Delete this post?</h3>
+        <p>This cannot be undone.</p>
+        <div class="modal-actions">
+            <button type="button" id="delete-cancel-btn" class="btn btn-secondary">Cancel</button>
+            <button type="button" id="delete-confirm-btn" class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+</div>
+
+
+{{end}}
 {{end}}
 
 <section class="comments">

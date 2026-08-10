@@ -8,10 +8,15 @@ import (
 
 // HomeHandler renders the index page, showing logged-in state if applicable.
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := utils.GetUserFromSession(r)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	if r.URL.Path != "/" {
+		RenderError(w, r, http.StatusNotFound, "Page Not Found")
 		return
 	}
-	renderTemplate(w, "index.html", pageData{Title: "Home", User: user})
+
+	user, err := utils.GetUserFromSession(r)
+	if err != nil {
+		RenderError(w, r, http.StatusBadRequest, "Invalid Category Selection")
+		return
+	}
+	renderTemplate(w, r, "index.html", pageData{Title: "Home", User: user})
 }

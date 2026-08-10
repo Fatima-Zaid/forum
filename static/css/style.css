@@ -507,6 +507,11 @@ main strong {
   padding: 18px 20px;
   box-shadow: 7px 7px 0 rgba(46, 16, 101, 0.3);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
+
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
 }
 
 .post-card:hover {
@@ -689,6 +694,10 @@ main strong {
 .post-detail form[action*="delete"] {
   display: inline-block;
   margin: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  background: none;
 }
 
 /* ---------- Comments ---------- */
@@ -831,4 +840,162 @@ main strong {
   .post-detail h1 {
     font-size: 13px;
   }
+}
+
+
+/* --- Toast popup (append to templates/../static/css/style.css) --- */
+.toast {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    padding: 0.75rem 1.25rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-success {
+    background: #2e7d32;
+}
+
+.toast-error {
+    background: #c62828;
+}
+
+/* --- Create Post CTA button on the home page --- */
+.new-post-cta {
+    margin: 1rem 0;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.6rem 1.1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #1565c0;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #0d47a1;
+}
+
+/* --- Custom confirm modal (replaces browser confirm()) --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+}
+
+.modal-overlay[hidden] {
+    display: none;
+}
+
+.modal {
+    background: #1e1e2e;
+    color: #eee;
+    border-radius: 10px;
+    padding: 1.5rem 1.75rem;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.modal h3 {
+    margin: 0 0 0.5rem;
+}
+
+.modal p {
+    margin: 0 0 1.25rem;
+    color: #bbb;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #eee;
+    border: 1px solid #555;
+}
+
+.btn-secondary:hover {
+    background: #2a2a3a;
+}
+
+.btn-danger {
+    background: #c62828;
+    color: #fff;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #a01f1f;
+}
+
+
+/* ---------- Custom Error Page ---------- */
+
+.error-box {
+    background: var(--panel);
+    border: 3px solid var(--ink);
+    padding: 30px 24px;
+    text-align: center;
+    box-shadow: 8px 8px 18px rgba(46, 16, 101, 0.3);
+    margin: 40px auto;
+    max-width: 500px;
+}
+
+.error-box h1 {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text-light);
+    margin: -30px -24px 20px -24px;
+    padding: 12px 16px;
+    background: linear-gradient(90deg, var(--titlebar-1), var(--titlebar-2));
+    border-bottom: 3px solid var(--ink);
+}
+
+.error-message {
+    font-family: var(--font-body);
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 24px;
+}
+
+.error-actions a {
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: #ffffff;
+    background: var(--button);
+    border: 3px outset var(--button);
+    padding: 10px 18px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.error-actions a:hover {
+    background: var(--button-hover);
 }

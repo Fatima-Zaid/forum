@@ -1,23 +1,17 @@
 {{define "content"}}
 
-{{with .Post}}
-
 <div class="form-container">
-    <h1>Edit Post</h1>
+    <h1>Create New Post</h1>
 
-    <form
-        action="/posts/{{.ID}}/edit"
-        method="post"
-        enctype="multipart/form-data"
-    >
+    <form action="/posts" method="post" enctype="multipart/form-data">
 
         <label>
             Title
             <input
                 type="text"
                 name="title"
-                value="{{.Title}}"
                 required
+                placeholder="Post title"
             >
         </label>
 
@@ -26,7 +20,7 @@
             <input
                 type="text"
                 name="game_title"
-                value="{{.GameTitle}}"
+                placeholder="Game title"
             >
         </label>
 
@@ -35,7 +29,8 @@
             <textarea
                 name="content"
                 required
-            >{{.Content}}</textarea>
+                placeholder="Write your post..."
+            ></textarea>
         </label>
 
         <label>
@@ -56,28 +51,15 @@
             >
         </label>
 
-        {{if .ImageURL}}
-        <p>
-            Current image:
-            <br>
-            <img
-                src="{{.ImageURL}}"
-                alt="{{.Title}}"
-                class="post-thumb"
-            >
-        </p>
-        {{end}}
-
         <fieldset>
             <legend>Categories</legend>
 
-            {{range $.Categories}}
+            {{range .Categories}}
             <label class="category-check">
                 <input
                     type="checkbox"
                     name="category_ids"
                     value="{{.ID}}"
-                    {{if $.Post.HasCategory .ID}}checked{{end}}
                 >
                 {{.Name}}
             </label>
@@ -93,11 +75,9 @@
             >
         </label>
 
-        <button type="submit">Save Changes</button>
+        <button type="submit">Create Post</button>
 
     </form>
 </div>
-
-{{end}}
 
 {{end}}
