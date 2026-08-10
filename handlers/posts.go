@@ -21,6 +21,7 @@ import (
 // context (categories, login state, which filter is active) to draw the
 // filter nav and the "new post" form.
 type IndexPageData struct {
+	Title         string
 	Posts          []models.Post
 	Categories     []models.Category
 	IsLoggedIn     bool
@@ -33,6 +34,7 @@ type IndexPageData struct {
 // CurrentUserID lets the template show the delete button only to the
 // post's own author (0 when logged out).
 type PostPageData struct {
+	Title         string
 	Post          *models.Post
 	Comments      []models.Comment
 	IsLoggedIn    bool
@@ -41,6 +43,7 @@ type PostPageData struct {
 }
 
 type EditPostPageData struct {
+	Title         string
 	Post       *models.Post
 	Categories []models.Category
 	IsLoggedIn bool
@@ -165,15 +168,11 @@ func EditPostHandler(db *sql.DB) http.HandlerFunc {
 // context, replace this with reading from context instead, and delete this
 // function. Kept local to this file so it's a one-place swap.
 func currentUserID(db *sql.DB, r *http.Request) (int, bool) {
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
+	user, err := utils.GetUserFromSession(r)
+	if err != nil || user == nil {
 		return 0, false
 	}
-	session, err := database.GetValidSession(db, cookie.Value)
-	if err != nil {
-		return 0, false
-	}
-	return session.UserID, true
+	return user.ID, true
 }
 
 const maxUploadSize = 10 << 20 // 10 MB
@@ -448,6 +447,7 @@ func GetPostHandler(db *sql.DB) http.HandlerFunc {
 		currentUser, _ := utils.GetUserFromSession(r)
 
 		renderTemplate(w, "post.html", PostPageData{
+			Title:         post.Title,
 			Post:          post,
 			Comments:      comments,
 			IsLoggedIn:    isLoggedIn,

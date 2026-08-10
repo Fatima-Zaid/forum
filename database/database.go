@@ -44,7 +44,11 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	}
 
 	if _, err := db.Exec(`ALTER TABLE posts ADD COLUMN updated_at DATETIME`); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
-		return nil, fmt.Errorf("migrate posts.updated_at: %w", err)
+    return nil, fmt.Errorf("migrate posts.updated_at: %w", err)
+	}
+
+	if _, err := db.Exec(`ALTER TABLE posts ADD COLUMN image_url TEXT`); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+		return nil, fmt.Errorf("migrate posts.image_url: %w", err)
 	}
 
 	DB = db
