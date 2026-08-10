@@ -138,6 +138,15 @@ main {
   z-index: 1;
 }
 
+/* Content-heavy pages (home, post detail, edit) get a wider stage.
+   Auth forms (login/register) keep the narrow dialog width above. */
+main:has(.post-list),
+main:has(.post-detail),
+main:has(.edit-post-form) {
+  max-width: 760px;
+  justify-content: flex-start;
+}
+
 /* title bar merged with the dialog body below it */
 h1 {
   font-family: var(--font-display);
@@ -282,6 +291,508 @@ main strong {
   color: var(--titlebar-2);
 }
 
+/* ---------- New Post / Edit Post forms ---------- */
+
+.new-post-form,
+.edit-post-form {
+  margin-bottom: 32px;
+}
+
+.new-post-form h2,
+.edit-post-form h2 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text-light);
+  margin: 0;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, var(--titlebar-1), var(--titlebar-2));
+  border: 3px solid var(--ink);
+  border-bottom: none;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.new-post-form form,
+.edit-post-form form {
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 8px 8px 18px rgba(46, 16, 101, 0.3);
+}
+
+.new-post-form label,
+.edit-post-form label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.new-post-form label::before,
+.edit-post-form label::before {
+  content: '\2726';
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--yellow);
+  text-shadow: 0 0 10px rgba(255, 204, 51, 0.9), 0 0 3px rgba(255, 204, 51, 1);
+}
+
+.new-post-form input[type="text"],
+.new-post-form textarea,
+.new-post-form input[type="file"],
+.edit-post-form input[type="text"],
+.edit-post-form textarea,
+.edit-post-form input[type="file"] {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 20px;
+  padding: 9px 12px;
+  border: 3px inset var(--panel-deep);
+  background: #ffffff;
+  color: var(--ink);
+  outline: none;
+}
+
+.new-post-form textarea,
+.edit-post-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.new-post-form input:focus,
+.new-post-form textarea:focus,
+.edit-post-form input:focus,
+.edit-post-form textarea:focus {
+  border-color: var(--button);
+  box-shadow: 0 0 0 3px rgba(139, 109, 217, 0.35);
+}
+
+.new-post-form fieldset,
+.edit-post-form fieldset {
+  border: 3px inset var(--panel-deep);
+  background: #ffffff;
+  padding: 12px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+.new-post-form legend,
+.edit-post-form legend {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--titlebar-2);
+  padding: 0 6px;
+}
+
+.category-check {
+  font-family: var(--font-body) !important;
+  font-size: 17px !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: var(--ink) !important;
+}
+
+.category-check::before {
+  content: '' !important;
+}
+
+.category-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--button);
+}
+
+.new-post-form button,
+.edit-post-form button {
+  align-self: flex-start;
+  font-family: var(--font-display);
+  font-size: 11px;
+  color: #ffffff;
+  background: var(--button);
+  border: 3px outset var(--button);
+  padding: 12px 20px;
+  cursor: pointer;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.new-post-form button:hover,
+.edit-post-form button:hover {
+  background: var(--button-hover);
+}
+
+.new-post-form button:active,
+.edit-post-form button:active {
+  border-style: inset;
+}
+
+.post-thumb {
+  max-width: 100%;
+  max-height: 160px;
+  border: 3px solid var(--ink);
+  margin-top: 8px;
+  display: block;
+}
+
+/* ---------- Filters bar ---------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  padding: 12px 16px;
+  margin-bottom: 28px;
+  box-shadow: 6px 6px 0 rgba(46, 16, 101, 0.25);
+}
+
+.filters a {
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: var(--titlebar-2);
+  text-decoration: none;
+  padding: 6px 10px;
+  border: 2px solid transparent;
+  letter-spacing: 0.5px;
+}
+
+.filters a:hover {
+  color: var(--text-light);
+  background: var(--button);
+  border-color: var(--ink);
+}
+
+.filters a.active {
+  color: var(--text-light);
+  background: var(--titlebar-2);
+  border: 2px solid var(--ink);
+}
+
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  width: 100%;
+  padding-top: 6px;
+  border-top: 2px dashed var(--panel-deep);
+  margin-top: 4px;
+}
+
+/* ---------- Post list / post cards ---------- */
+
+.post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.post-list > p {
+  font-family: var(--font-body);
+  font-size: 20px;
+  text-align: center;
+}
+
+.post-card {
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  padding: 18px 20px;
+  box-shadow: 7px 7px 0 rgba(46, 16, 101, 0.3);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.post-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 9px 9px 0 rgba(46, 16, 101, 0.35);
+}
+
+.post-card h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.post-card h3 a,
+.post-detail h1 {
+  color: var(--titlebar-2);
+  text-decoration: none;
+}
+
+.post-card h3 a:hover {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+}
+
+.game-title {
+  font-family: var(--font-body);
+  font-size: 17px;
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 0 0 8px;
+}
+
+.meta {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text-dim);
+  margin: 4px 0;
+}
+
+.edited-badge {
+  color: var(--text-dim);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.excerpt {
+  font-size: 19px;
+  color: var(--ink);
+  margin: 10px 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.tag {
+  font-family: var(--font-display);
+  font-size: 9px;
+  color: var(--ink);
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  padding: 5px 8px;
+  letter-spacing: 0.3px;
+}
+
+.reactions {
+  font-size: 19px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.reactions form.inline-form {
+  display: inline-flex;
+}
+
+.reactions button {
+  font-family: var(--font-body);
+  font-size: 18px;
+  background: none;
+  border: 2px solid transparent;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 3px 6px;
+}
+
+.reactions button:hover {
+  border-color: var(--panel-deep);
+  background: #ffffff;
+}
+
+/* ---------- Post detail page ---------- */
+
+.post-detail {
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  padding: 24px 22px;
+  box-shadow: 8px 8px 18px rgba(46, 16, 101, 0.3);
+  margin-bottom: 32px;
+}
+
+.post-detail h1 {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 16px;
+  color: var(--titlebar-2);
+  text-shadow: none;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.post-detail h1::after {
+  content: '';
+}
+
+.post-image {
+  max-width: 100%;
+  border: 3px solid var(--ink);
+  margin: 12px 0;
+  display: block;
+}
+
+.post-detail .content {
+  font-size: 20px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin: 16px 0;
+  white-space: pre-wrap;
+}
+
+.post-detail .reactions {
+  border-top: 2px dashed var(--panel-deep);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.edit-btn,
+.delete-btn {
+  font-family: var(--font-display);
+  font-size: 10px;
+  display: inline-block;
+  margin-top: 16px;
+  margin-right: 10px;
+  padding: 10px 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.edit-btn {
+  color: var(--text-light);
+  background: var(--button);
+  border: 3px outset var(--button);
+}
+
+.edit-btn:hover {
+  background: var(--button-hover);
+}
+
+.delete-btn {
+  color: var(--text-light);
+  background: var(--rose);
+  border: 3px outset var(--rose);
+}
+
+.delete-btn:hover {
+  filter: brightness(0.95);
+}
+
+.post-detail form[action*="delete"] {
+  display: inline-block;
+  margin: 0;
+}
+
+/* ---------- Comments ---------- */
+
+.comments {
+  margin-top: 8px;
+}
+
+.comments h2 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--text-light);
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, var(--titlebar-1), var(--titlebar-2));
+  border: 3px solid var(--ink);
+}
+
+.new-comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.new-comment-form textarea {
+  font-family: var(--font-body);
+  font-size: 19px;
+  padding: 9px 12px;
+  border: 3px inset var(--panel-deep);
+  background: #ffffff;
+  color: var(--ink);
+  min-height: 80px;
+  resize: vertical;
+  outline: none;
+}
+
+.new-comment-form button {
+  align-self: flex-start;
+  font-family: var(--font-display);
+  font-size: 10px;
+  color: #ffffff;
+  background: var(--button);
+  border: 3px outset var(--button);
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.new-comment-form button:hover {
+  background: var(--button-hover);
+}
+
+.comments > p {
+  font-size: 19px;
+  text-align: center;
+}
+
+.comment {
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+}
+
+.comment .meta {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.comment .meta strong {
+  color: var(--titlebar-2);
+}
+
+.comment .content {
+  font-size: 19px;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.comment-media {
+  max-width: 100%;
+  max-height: 220px;
+  border: 3px solid var(--ink);
+  display: block;
+  margin: 8px 0;
+}
+
+.comment .reactions {
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.replies {
+  margin-top: 12px;
+  padding-left: 18px;
+  border-left: 3px dashed var(--panel-deep);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* ---------- Small screens ---------- */
 
 @media (max-width: 480px) {
@@ -298,5 +809,26 @@ main strong {
   body::before,
   body::after {
     display: none;
+  }
+
+  main:has(.post-list),
+  main:has(.post-detail),
+  main:has(.edit-post-form) {
+    padding: 24px 14px;
+  }
+
+  .post-card,
+  .post-detail,
+  .new-post-form form,
+  .edit-post-form form {
+    padding: 16px 14px;
+  }
+
+  .filters {
+    padding: 10px 12px;
+  }
+
+  .post-detail h1 {
+    font-size: 13px;
   }
 }
