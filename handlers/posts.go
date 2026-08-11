@@ -532,3 +532,58 @@ func GetPostHandler(db *sql.DB) http.HandlerFunc {
 		)
 	}
 }
+
+
+
+type DeleteConfirmPageData struct {
+	Title      string
+	Post       *models.Post
+	IsLoggedIn bool
+	User       *models.User
+}
+
+func DeleteConfirmPageHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			RenderError(w, r, http.StatusMethodNotAllowed, "Method Not Allowed")
+			return
+		}
+
+		userID, ok := currentUserID(db, r)
+		if !ok {
+			RenderError(w, r, http.StatusUnauthorized, "You must be logged in")
+			return
+		}
+
+		idStr := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/posts/"), "/delete-confirm")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			RenderError(w, r, http.StatusBadRequest, "Invalid Post ID")
+			return
+		}
+
+		post, err := database.GetPostByID(db, id)
+		if err == database.ErrNotFound {
+			RenderError(w, r, http.StatusNotFound, "Post Not Found")
+			return
+		}
+		if err != nil {
+			log.Println("delete-confirm: get post error:", err)
+			RenderError(w, r, http.StatusInternalServerError, "Could not load post")
+			return
+		}
+		if post.UserID != userID {
+			RenderError(w, r, http.StatusForbidden, "You do not own this post")
+			return
+		}
+
+		currentUser, _ := utils.GetUserFromSession(r)
+
+		renderTemplate(w, r, "delete_confirm.html", DeleteConfirmPageData{
+			Title:      "Confirm Delete",
+			Post:       post,
+			IsLoggedIn: true,
+			User:       currentUser,
+		})
+	}
+}

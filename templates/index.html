@@ -23,37 +23,54 @@
     {{if not .Posts}}
         <p>No posts here yet.</p>
     {{end}}
+
     {{range .Posts}}
-<a href="/posts/{{.ID}}" class="post-card">
-    <h3>{{.Title}}</h3>
+    <div class="post-card">
+        <a href="/posts/{{.ID}}" class="post-card-link">
+            <h3>{{.Title}}</h3>
 
-    {{if .GameTitle}}
-        <p class="game-title">{{.GameTitle}}</p>
-    {{end}}
+            {{if .GameTitle}}
+                <p class="game-title">{{.GameTitle}}</p>
+            {{end}}
 
-    {{if .ImageURL}}
-        <img src="{{.ImageURL}}" alt="{{.Title}}" class="post-thumb">
-    {{end}}
+            <div class="post-thumb-wrap">
+                {{if .ImageURL}}
+                    <img src="{{.ImageURL}}" alt="{{.Title}}" class="post-thumb">
+                {{end}}
+            </div>
 
-    <p class="meta">
-        by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
-        {{if .IsEdited}}
-            · <span class="edited-badge">(edited)</span>
-        {{end}}
-    </p>
+            <p class="meta">
+                by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
+                {{if .IsEdited}}
+                    · <span class="edited-badge">(edited)</span>
+                {{end}}
+            </p>
 
-    <p class="excerpt">{{.Content}}</p>
+            <p class="excerpt">{{.Content}}</p>
 
-    <p class="tags">
-        {{range .Categories}}
-            <span class="tag">{{.Name}}</span>
-        {{end}}
-    </p>
+            <p class="tags">
+                {{range .Categories}}
+                    <span class="tag">{{.Name}}</span>
+                {{end}}
+            </p>
+        </a>
 
-    <p class="reactions">
-        👍 {{.LikeCount}} · 👎 {{.DislikeCount}} · 💬 {{.CommentCount}}
-    </p>
-</a>
+        <div class="reactions">
+            {{if $.IsLoggedIn}}
+            <form action="/posts/{{.ID}}/react" method="post" class="inline-form">
+                <input type="hidden" name="type" value="like">
+                <button type="submit">👍 {{.LikeCount}}</button>
+            </form>
+            <form action="/posts/{{.ID}}/react" method="post" class="inline-form">
+                <input type="hidden" name="type" value="dislike">
+                <button type="submit">👎 {{.DislikeCount}}</button>
+            </form>
+            {{else}}
+            <span>👍 {{.LikeCount}} · 👎 {{.DislikeCount}}</span>
+            {{end}}
+            · 💬 {{.CommentCount}}
+        </div>
+    </div>
     {{end}}
 </section>
 
