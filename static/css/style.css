@@ -526,7 +526,15 @@ main strong {
   line-height: 1.5;
 }
 
-.post-card h3 a,
+.post-card h3 {
+  color: var(--titlebar-2);
+}
+
+.post-card h3 a {
+  color: var(--titlebar-2);
+  text-decoration: none;
+}
+
 .post-detail h1 {
   color: var(--titlebar-2);
   text-decoration: none;
@@ -998,4 +1006,13 @@ main strong {
 
 .error-actions a:hover {
     background: var(--button-hover);
+}
+
+/*icons css*/
+.icon-comment {
+  width: 18px;
+  height: auto;
+  vertical-align: -3px;
+  image-rendering: pixelated;
+  margin-right: 2px;
 }
