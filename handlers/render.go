@@ -10,7 +10,12 @@ import (
 )
 
 func renderTemplate(w http.ResponseWriter, r *http.Request, page string, data any) {
-	tmpl, err := template.ParseFiles(
+	funcMap := template.FuncMap{
+		"flashSuccess": func() string { return r.URL.Query().Get("success") },
+		"flashError":   func() string { return r.URL.Query().Get("error") },
+	}
+
+	tmpl, err := template.New("layout.html").Funcs(funcMap).ParseFiles(
 		templatesDir+"layout.html",
 		templatesDir+page,
 		templatesDir+"partials/nav.html",
@@ -45,7 +50,12 @@ func RenderError(w http.ResponseWriter, r *http.Request, status int, message str
 		User:    currentUser,
 	}
 
-	tmpl, err := template.ParseFiles(
+	funcMap := template.FuncMap{
+		"flashSuccess": func() string { return r.URL.Query().Get("success") },
+		"flashError":   func() string { return r.URL.Query().Get("error") },
+	}
+
+	tmpl, err := template.New("layout.html").Funcs(funcMap).ParseFiles(
 		templatesDir+"layout.html",
 		templatesDir+"error.html",
 	)

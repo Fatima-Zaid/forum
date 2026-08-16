@@ -51,6 +51,7 @@ func postsSubrouter(db *sql.DB) http.HandlerFunc {
 	editPost := handlers.EditPostHandler(db)
 	react := handlers.ReactToPostHandler(db)
 	deletePost := handlers.DeletePostHandler(db)
+	deleteConfirm := handlers.DeleteConfirmPageHandler(db)
 	newPostPage := handlers.NewPostPageHandler(db)
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +71,12 @@ func postsSubrouter(db *sql.DB) http.HandlerFunc {
 		// /posts/{id}/react
 		case strings.HasSuffix(r.URL.Path, "/react"):
 			react(w, r)
+			return
+
+		// /posts/{id}/delete-confirm  (must be checked BEFORE /delete,
+		// since "/delete-confirm" also ends with "-confirm", not "/delete")
+		case strings.HasSuffix(r.URL.Path, "/delete-confirm"):
+			deleteConfirm(w, r)
 			return
 
 		// /posts/{id}/delete

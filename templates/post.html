@@ -1,72 +1,178 @@
 {{define "content"}}
+
 {{with .Post}}
+
 <article class="post-detail">
+
     <h1>{{.Title}}</h1>
-    {{if .GameTitle}}<p class="game-title">{{.GameTitle}}</p>{{end}}
+
+    {{if .GameTitle}}
+    <p class="game-title">{{.GameTitle}}</p>
+    {{end}}
+
     <p class="meta">
         by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
-        {{if .IsEdited}} · <span class="edited-badge">(edited)</span>{{end}}
+        {{if .IsEdited}}
+        · <span class="edited-badge">(edited)</span>
+        {{end}}
     </p>
 
     <p class="tags">
-        {{range .Categories}}<span class="tag">{{.Name}}</span>{{end}}
-    </p>
-    {{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Title}}" class="post-image">{{end}}
-    <div class="content">{{.Content}}</div>
-
-    <div class="reactions">
-        {{if $.IsLoggedIn}}
-        <form action="/posts/{{.ID}}/react" method="post" class="inline-form">
-            <input type="hidden" name="type" value="like">
-            <button type="submit">👍 {{.LikeCount}}</button>
-        </form>
-        <form action="/posts/{{.ID}}/react" method="post" class="inline-form">
-            <input type="hidden" name="type" value="dislike">
-            <button type="submit">👎 {{.DislikeCount}}</button>
-        </form>
-        {{else}}
-        <span>👍 {{.LikeCount}} · 👎 {{.DislikeCount}}</span>
+        {{range .Categories}}
+        <span class="tag">{{.Name}}</span>
         {{end}}
+    </p>
+
+    {{if .ImageURL}}
+    <img
+        src="{{.ImageURL}}"
+        alt="{{.Title}}"
+        class="post-image"
+    >
+    {{end}}
+
+    <div class="content">
+        {{.Content}}
     </div>
 
+    <!-- Like / Dislike -->
+    <div class="reactions">
+
+        {{if $.IsLoggedIn}}
+
+        <form
+            action="/posts/{{.ID}}/react"
+            method="post"
+            class="inline-form"
+        >
+            <input type="hidden" name="type" value="like">
+            <button type="submit">
+                👍 {{.LikeCount}}
+            </button>
+        </form>
+
+        <form
+            action="/posts/{{.ID}}/react"
+            method="post"
+            class="inline-form"
+        >
+            <input type="hidden" name="type" value="dislike">
+            <button type="submit">
+                👎 {{.DislikeCount}}
+            </button>
+        </form>
+
+        {{else}}
+
+        <span>
+            👍 {{.LikeCount}} · 👎 {{.DislikeCount}}
+        </span>
+
+        {{end}}
+
+    </div>
+
+
+    <!-- Edit / Delete -->
     {{if eq $.CurrentUserID .UserID}}
-    <a href="/posts/{{.ID}}/edit" class="edit-btn">Edit Post</a>
-    <form id="delete-post-form" action="/posts/{{.ID}}/delete" method="post">
-        <button type="submit" class="delete-btn" data-confirm-delete>Delete Post</button>
-    </form>
+
+    <a
+        href="/posts/{{.ID}}/edit"
+        class="edit-btn"
+    >
+        Edit Post
+    </a>
+
+    <!-- Hidden checkbox controls the confirmation box -->
+    <input
+        type="checkbox"
+        id="delete-toggle-{{.ID}}"
+        class="delete-toggle"
+    >
+
+    <!-- Delete button -->
+    <label
+        for="delete-toggle-{{.ID}}"
+        class="delete-btn"
+    >
+        Delete Post
+    </label>
+
+    <!-- Confirmation box -->
+    <span class="confirm-box">
+
+        <span class="confirm-text">
+            Delete this post? Cannot be undone.
+        </span>
+
+        <form
+            action="/posts/{{.ID}}/delete"
+            method="post"
+            style="display:inline-block; margin:0;"
+        >
+            <button
+                type="submit"
+                class="btn-danger"
+            >
+                Yes, Delete
+            </button>
+        </form>
+
+        <label
+            for="delete-toggle-{{.ID}}"
+            class="btn-secondary"
+        >
+            Cancel
+        </label>
+
+    </span>
+
     {{end}}
+
 </article>
 
-{{if eq $.CurrentUserID .UserID}}
-<div id="delete-modal" class="modal-overlay" hidden>
-    <div class="modal">
-        <h3>Delete this post?</h3>
-        <p>This cannot be undone.</p>
-        <div class="modal-actions">
-            <button type="button" id="delete-cancel-btn" class="btn btn-secondary">Cancel</button>
-            <button type="button" id="delete-confirm-btn" class="btn btn-danger">Delete</button>
-        </div>
-    </div>
-</div>
+{{end}}
 
 
-{{end}}
-{{end}}
+<!-- Comments -->
 
 <section class="comments">
-    <h2>Comments ({{len .Comments}})</h2>
+
+    <h2>
+        Comments ({{len .Comments}})
+    </h2>
 
     {{if .IsLoggedIn}}
-    <form action="/posts/{{.Post.ID}}/comments" method="post" class="new-comment-form">
-        <textarea name="content" required placeholder="Add a comment..."></textarea>
-        <button type="submit">Comment</button>
+
+    <form
+        action="/posts/{{.Post.ID}}/comments"
+        method="post"
+        class="new-comment-form"
+    >
+        <textarea
+            name="content"
+            required
+            placeholder="Add a comment..."
+        ></textarea>
+
+        <button type="submit">
+            Comment
+        </button>
     </form>
+
     {{end}}
 
+
     {{range .Comments}}
+
         {{template "comment" .}}
+
     {{else}}
+
         <p>No comments yet.</p>
+
     {{end}}
+
 </section>
+
 {{end}}

@@ -3,13 +3,13 @@ package handlers
 import (
 	"database/sql"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
 	"forum/database"
 	"forum/models"
 )
-
 
 func ReactToPostHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +47,11 @@ func ReactToPostHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		http.Redirect(w, r, "/posts/"+idStr, http.StatusSeeOther)
+		msg := "Liked!"
+		if reactionType == models.Dislike {
+			msg = "Disliked!"
+		}
+
+		http.Redirect(w, r, "/posts/"+idStr+"?success="+url.QueryEscape(msg), http.StatusSeeOther)
 	}
 }

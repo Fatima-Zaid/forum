@@ -23,6 +23,20 @@
         </nav>
     </header>
 
+    {{with flashSuccess}}
+    <div class="toast-banner toast-success">
+        <span>{{.}}</span>
+        <a href="?" class="toast-close" aria-label="Dismiss">✕</a>
+    </div>
+    {{end}}
+
+    {{with flashError}}
+    <div class="toast-banner toast-error">
+        <span>{{.}}</span>
+        <a href="?" class="toast-close" aria-label="Dismiss">✕</a>
+    </div>
+    {{end}}
+
     <main>
         {{template "content" .}}
     </main>
