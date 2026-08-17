@@ -13,6 +13,7 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, page string, data an
 	funcMap := template.FuncMap{
 		"flashSuccess": func() string { return r.URL.Query().Get("success") },
 		"flashError":   func() string { return r.URL.Query().Get("error") },
+		"add":          func(a, b int) int { return a + b },
 	}
 
 	tmpl, err := template.New("layout.html").Funcs(funcMap).ParseFiles(
@@ -53,6 +54,7 @@ func RenderError(w http.ResponseWriter, r *http.Request, status int, message str
 	funcMap := template.FuncMap{
 		"flashSuccess": func() string { return r.URL.Query().Get("success") },
 		"flashError":   func() string { return r.URL.Query().Get("error") },
+		"add":          func(a, b int) int { return a + b },
 	}
 
 	tmpl, err := template.New("layout.html").Funcs(funcMap).ParseFiles(

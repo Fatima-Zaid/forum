@@ -2,9 +2,10 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    email         TEXT    NOT NULL UNIQUE,
-    password_hash TEXT    NOT NULL,
+    username      TEXT NOT NULL UNIQUE,
+    email         TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    avatar_url    TEXT,
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -39,11 +40,23 @@ CREATE TABLE IF NOT EXISTS posts (
     title      TEXT    NOT NULL,
     game_title TEXT,
     content    TEXT    NOT NULL,
-    image_url  TEXT,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+
+
+CREATE TABLE IF NOT EXISTS post_images (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id    INTEGER NOT NULL,
+    image_url  TEXT NOT NULL,
+    position   INTEGER NOT NULL DEFAULT 0,   -- controls left-to-right scroll order
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_post_images_post_id ON post_images(post_id);
+
 
 CREATE TABLE IF NOT EXISTS post_categories (
     post_id     INTEGER NOT NULL,

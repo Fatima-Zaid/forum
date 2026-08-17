@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -146,15 +147,20 @@ func EditPostHandler(db *sql.DB) http.HandlerFunc {
 				redirectWithError(w, r, "/posts/"+idStr+"/edit", "Title and content are required")
 				return
 			}
-			imageURL, err := saveUploadedImage(r, "image", "posts")
+
+			uploaded, err := saveUploadedImages(r, "images", "posts")
 			if err != nil {
 				redirectWithError(w, r, "/posts/"+idStr+"/edit", err.Error())
 				return
 			}
 
-			// If no file was uploaded, use the URL instead.
-			if imageURL == "" {
-				imageURL = strings.TrimSpace(r.FormValue("image_url"))
+			var images []string
+			images = append(images, uploaded...)
+			for _, raw := range r.Form["image_urls"] {
+				u := strings.TrimSpace(raw)
+				if u != "" {
+					images = append(images, u)
+				}
 			}
 
 			var categoryIDs []int
@@ -186,7 +192,7 @@ func EditPostHandler(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			if err := database.UpdatePost(db, id, userID, title, gameTitle, content, imageURL, categoryIDs); err != nil {
+			if err := database.UpdatePost(db, id, userID, title, gameTitle, content, images, categoryIDs); err != nil {
 				log.Println("edit: update post error:", err)
 				RenderError(w, r, http.StatusInternalServerError, "Could not update post")
 				return
@@ -214,11 +220,37 @@ func redirectWithError(w http.ResponseWriter, r *http.Request, path, msg string)
 	http.Redirect(w, r, path+"?error="+url.QueryEscape(msg), http.StatusSeeOther)
 }
 
-func saveUploadedImage(r *http.Request, field, subdir string) (string, error) {
-	file, header, err := r.FormFile(field)
-	if err == http.ErrMissingFile {
-		return "", nil
+// saveUploadedImages saves every file under the given multipart field name
+// (e.g. "images", submitted via <input type="file" multiple>) and returns
+// their public URLs in the order they were uploaded. Returns an empty slice
+// (not an error) if no files were selected.
+func saveUploadedImages(r *http.Request, field, subdir string) ([]string, error) {
+	if r.MultipartForm == nil {
+		return nil, nil
 	}
+	headers := r.MultipartForm.File[field]
+	if len(headers) == 0 {
+		return nil, nil
+	}
+
+	dir := filepath.Join("static", "uploads", subdir)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return nil, fmt.Errorf("create upload dir: %w", err)
+	}
+
+	var urls []string
+	for _, header := range headers {
+		u, err := saveOneUploadedImage(header, subdir, dir)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, u)
+	}
+	return urls, nil
+}
+
+func saveOneUploadedImage(header *multipart.FileHeader, subdir, dir string) (string, error) {
+	file, err := header.Open()
 	if err != nil {
 		return "", fmt.Errorf("read upload: %w", err)
 	}
@@ -229,11 +261,6 @@ func saveUploadedImage(r *http.Request, field, subdir string) (string, error) {
 	case ".jpg", ".jpeg", ".png", ".gif", ".webp":
 	default:
 		return "", fmt.Errorf("unsupported image type %q", ext)
-	}
-
-	dir := filepath.Join("static", "uploads", subdir)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return "", fmt.Errorf("create upload dir: %w", err)
 	}
 
 	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
@@ -279,15 +306,19 @@ func CreatePostHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		imageURL, err := saveUploadedImage(r, "image", "posts")
+		uploaded, err := saveUploadedImages(r, "images", "posts")
 		if err != nil {
 			redirectWithError(w, r, "/posts/new", err.Error())
 			return
 		}
 
-		// If no file was uploaded, use the URL instead.
-		if imageURL == "" {
-			imageURL = strings.TrimSpace(r.FormValue("image_url"))
+		var images []string
+		images = append(images, uploaded...)
+		for _, raw := range r.Form["image_urls"] {
+			u := strings.TrimSpace(raw)
+			if u != "" {
+				images = append(images, u)
+			}
 		}
 
 		var categoryIDs []int
@@ -321,7 +352,7 @@ func CreatePostHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		postID, err := database.CreatePost(db, userID, title, gameTitle, content, imageURL, categoryIDs)
+		postID, err := database.CreatePost(db, userID, title, gameTitle, content, images, categoryIDs)
 		if err != nil {
 			log.Println("create post: db error:", err)
 			redirectWithError(w, r, "/posts/new", "Something went wrong, post was not created")
@@ -366,7 +397,6 @@ func DeletePostHandler(db *sql.DB) http.HandlerFunc {
 
 func ListPostsHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Strict check for non-existent paths hitting "/"
 		if r.URL.Path != "/" {
 			RenderError(w, r, http.StatusNotFound, "Page Not Found")
 			return
@@ -449,68 +479,35 @@ func GetPostHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method != http.MethodGet {
-			RenderError(
-				w,
-				r,
-				http.StatusMethodNotAllowed,
-				"Method Not Allowed",
-			)
+			RenderError(w, r, http.StatusMethodNotAllowed, "Method Not Allowed")
 			return
 		}
 
-		// Remove /posts/ from the beginning.
 		idStr := strings.TrimPrefix(r.URL.Path, "/posts/")
 
-		// Convert the remaining part to an integer.
 		id, err := strconv.Atoi(idStr)
 		if err != nil {
-			RenderError(
-				w,
-				r,
-				http.StatusBadRequest,
-				"Invalid Post ID",
-			)
+			RenderError(w, r, http.StatusBadRequest, "Invalid Post ID")
 			return
 		}
 
-		// Get the post from the database.
 		post, err := database.GetPostByID(db, id)
 
-		// The database function converts sql.ErrNoRows
-		// into database.ErrNotFound.
 		if err == database.ErrNotFound {
-			RenderError(
-				w,
-				r,
-				http.StatusNotFound,
-				"Post Not Found",
-			)
+			RenderError(w, r, http.StatusNotFound, "Post Not Found")
 			return
 		}
 
-		// Any other database error = 500.
 		if err != nil {
 			log.Println("post: get post error:", err)
-
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Could not load post",
-			)
+			RenderError(w, r, http.StatusInternalServerError, "Could not load post")
 			return
 		}
 
 		comments, err := database.GetCommentsByPost(db, id)
 		if err != nil {
 			log.Println("post: get comments error:", err)
-
-			RenderError(
-				w,
-				r,
-				http.StatusInternalServerError,
-				"Could not load comments",
-			)
+			RenderError(w, r, http.StatusInternalServerError, "Could not load comments")
 			return
 		}
 
@@ -532,8 +529,6 @@ func GetPostHandler(db *sql.DB) http.HandlerFunc {
 		)
 	}
 }
-
-
 
 type DeleteConfirmPageData struct {
 	Title      string

@@ -33,11 +33,11 @@
                 <p class="game-title">{{.GameTitle}}</p>
             {{end}}
 
-            <div class="post-thumb-wrap">
-                {{if .ImageURL}}
-                    <img src="{{.ImageURL}}" alt="{{.Title}}" class="post-thumb">
-                {{end}}
-            </div>
+<div class="post-thumb-wrap">
+    {{if .Images}}
+        <img src="{{index .Images 0}}" alt="{{.Title}}" class="post-thumb">
+    {{end}}
+</div>
 
             <p class="meta">
                 by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}

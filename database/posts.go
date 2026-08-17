@@ -9,10 +9,10 @@ import (
 	"forum/models"
 )
 
-// CreatePost inserts a post and links it to one or more categories in a
-// single transaction, so a failure partway through leaves nothing behind.
-// imageURL may be "" if the post has no image.
-func CreatePost(db *sql.DB, userID int, title, gameTitle, content, imageURL string, categoryIDs []int) (int, error) {
+// CreatePost inserts a post, its images, and its category links in a single
+// transaction, so a failure partway through leaves nothing behind.
+// images may be nil/empty if the post has no images; order is preserved.
+func CreatePost(db *sql.DB, userID int, title, gameTitle, content string, images []string, categoryIDs []int) (int, error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return 0, fmt.Errorf("begin tx: %w", err)
@@ -20,8 +20,8 @@ func CreatePost(db *sql.DB, userID int, title, gameTitle, content, imageURL stri
 	defer tx.Rollback() // no-op if committed
 
 	res, err := tx.Exec(
-		`INSERT INTO posts (user_id, title, game_title, content, image_url) VALUES (?, ?, ?, ?, ?)`,
-		userID, title, gameTitle, content, nullIfEmpty(imageURL),
+		`INSERT INTO posts (user_id, title, game_title, content) VALUES (?, ?, ?, ?)`,
+		userID, title, gameTitle, content,
 	)
 	if err != nil {
 		return 0, fmt.Errorf("insert post: %w", err)
@@ -31,6 +31,10 @@ func CreatePost(db *sql.DB, userID int, title, gameTitle, content, imageURL stri
 		return 0, fmt.Errorf("get post id: %w", err)
 	}
 	postID := int(postID64)
+
+	if err := insertPostImages(tx, postID, images, 0); err != nil {
+		return 0, err
+	}
 
 	for _, catID := range categoryIDs {
 		if _, err := tx.Exec(
@@ -47,30 +51,23 @@ func CreatePost(db *sql.DB, userID int, title, gameTitle, content, imageURL stri
 	return postID, nil
 }
 
-// UpdatePost overwrites an existing post owned by userID. imageURL is only
-// applied if non-empty — pass "" to keep the existing image. Returns
-// ErrNotFound if the post doesn't exist or isn't owned by this user.
-func UpdatePost(db *sql.DB, postID, userID int, title, gameTitle, content, imageURL string, categoryIDs []int) error {
+// UpdatePost overwrites an existing post owned by userID. newImages are
+// APPENDED after whatever images the post already has — pass nil/empty to
+// leave the existing gallery untouched. (Once edit.html supports removing
+// individual images, this is the place to add a "replace entirely" path.)
+// Returns ErrNotFound if the post doesn't exist or isn't owned by this user.
+func UpdatePost(db *sql.DB, postID, userID int, title, gameTitle, content string, newImages []string, categoryIDs []int) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
 	defer tx.Rollback()
 
-	var res sql.Result
-	if imageURL != "" {
-		res, err = tx.Exec(
-			`UPDATE posts SET title = ?, game_title = ?, content = ?, image_url = ?, updated_at = CURRENT_TIMESTAMP
-			 WHERE id = ? AND user_id = ?`,
-			title, gameTitle, content, imageURL, postID, userID,
-		)
-	} else {
-		res, err = tx.Exec(
-			`UPDATE posts SET title = ?, game_title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
-			 WHERE id = ? AND user_id = ?`,
-			title, gameTitle, content, postID, userID,
-		)
-	}
+	res, err := tx.Exec(
+		`UPDATE posts SET title = ?, game_title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
+		 WHERE id = ? AND user_id = ?`,
+		title, gameTitle, content, postID, userID,
+	)
 	if err != nil {
 		return fmt.Errorf("update post: %w", err)
 	}
@@ -80,6 +77,22 @@ func UpdatePost(db *sql.DB, postID, userID int, title, gameTitle, content, image
 	}
 	if affected == 0 {
 		return ErrNotFound // wrong owner, or post doesn't exist
+	}
+
+	if len(newImages) > 0 {
+		var maxPos sql.NullInt64
+		if err := tx.QueryRow(
+			`SELECT MAX(position) FROM post_images WHERE post_id = ?`, postID,
+		).Scan(&maxPos); err != nil {
+			return fmt.Errorf("get max image position: %w", err)
+		}
+		startPos := 0
+		if maxPos.Valid {
+			startPos = int(maxPos.Int64) + 1
+		}
+		if err := insertPostImages(tx, postID, newImages, startPos); err != nil {
+			return err
+		}
 	}
 
 	if _, err := tx.Exec(`DELETE FROM post_categories WHERE post_id = ?`, postID); err != nil {
@@ -97,11 +110,55 @@ func UpdatePost(db *sql.DB, postID, userID int, title, gameTitle, content, image
 	return tx.Commit()
 }
 
+// insertPostImages inserts images in order, starting at startPos. Empty
+// strings are skipped so a blank URL input in the form doesn't create a
+// bogus row.
+func insertPostImages(tx *sql.Tx, postID int, images []string, startPos int) error {
+	pos := startPos
+	for _, img := range images {
+		if img == "" {
+			continue
+		}
+		if _, err := tx.Exec(
+			`INSERT INTO post_images (post_id, image_url, position) VALUES (?, ?, ?)`,
+			postID, img, pos,
+		); err != nil {
+			return fmt.Errorf("insert image: %w", err)
+		}
+		pos++
+	}
+	return nil
+}
+
+// getImagesForPost returns a post's images in display order.
+func getImagesForPost(db *sql.DB, postID int) ([]string, error) {
+	rows, err := db.Query(
+		`SELECT image_url FROM post_images WHERE post_id = ? ORDER BY position ASC`,
+		postID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get images for post: %w", err)
+	}
+	defer rows.Close()
+
+	var images []string
+	for rows.Next() {
+		var url string
+		if err := rows.Scan(&url); err != nil {
+			return nil, fmt.Errorf("scan image: %w", err)
+		}
+		images = append(images, url)
+	}
+	return images, rows.Err()
+}
+
 // basePostSelect is reused by every listing/read query below so the shape
 // (and the reaction-count subqueries) stays consistent everywhere.
+// NOTE: image_url is gone — images are fetched separately via
+// getImagesForPost, same pattern as categories.
 const basePostSelect = `
 	SELECT
-		p.id, p.user_id, u.username, p.title, p.game_title, p.content, COALESCE(p.image_url, ''), p.created_at, p.updated_at,
+		p.id, p.user_id, u.username, p.title, p.game_title, p.content, p.created_at, p.updated_at,
 		(SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id AND r.type = 'like') AS like_count,
 		(SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id AND r.type = 'dislike') AS dislike_count,
 		(SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) AS comment_count
@@ -167,7 +224,7 @@ func scanPost(row interface{ Scan(...any) error }) (models.Post, error) {
 	var p models.Post
 	var updatedAt nullableTime
 	err := row.Scan(
-		&p.ID, &p.UserID, &p.Username, &p.Title, &p.GameTitle, &p.Content, &p.ImageURL, &p.CreatedAt, &updatedAt,
+		&p.ID, &p.UserID, &p.Username, &p.Title, &p.GameTitle, &p.Content, &p.CreatedAt, &updatedAt,
 		&p.LikeCount, &p.DislikeCount, &p.CommentCount,
 	)
 	if err != nil {
@@ -179,7 +236,7 @@ func scanPost(row interface{ Scan(...any) error }) (models.Post, error) {
 	return p, nil
 }
 
-// GetPostByID also attaches the post's categories.
+// GetPostByID also attaches the post's categories and images.
 func GetPostByID(db *sql.DB, postID int) (*models.Post, error) {
 	row := db.QueryRow(basePostSelect+` WHERE p.id = ?`, postID)
 	p, err := scanPost(row)
@@ -191,13 +248,20 @@ func GetPostByID(db *sql.DB, postID int) (*models.Post, error) {
 	}
 
 	// Safe here (unlike collectPosts below): db.QueryRow's Scan already
-	// released the connection back to the pool before we get here, so this
-	// second query can't deadlock against the 1-connection pool.
+	// released the connection back to the pool before we get here, so these
+	// follow-up queries can't deadlock against the 1-connection pool.
 	cats, err := getCategoriesForPost(db, postID)
 	if err != nil {
 		return nil, err
 	}
 	p.Categories = cats
+
+	images, err := getImagesForPost(db, postID)
+	if err != nil {
+		return nil, err
+	}
+	p.Images = images
+
 	return &p, nil
 }
 
@@ -253,8 +317,8 @@ func GetPostsLikedByUser(db *sql.DB, userID int) ([]models.Post, error) {
 	return collectPosts(db, rows)
 }
 
-// collectPosts scans rows into a slice, then attaches categories to each
-// post in a second pass. IMPORTANT: the category lookups must happen after
+// collectPosts scans rows into a slice, then attaches categories and images
+// to each post in a second pass. IMPORTANT: those lookups must happen after
 // rows.Close(), not while iterating — the connection pool is capped at 1
 // (see database.go's SetMaxOpenConns(1)), so issuing a second query while
 // these rows are still open would deadlock waiting for a connection that
@@ -283,6 +347,12 @@ func collectPosts(db *sql.DB, rows *sql.Rows) ([]models.Post, error) {
 			return nil, err
 		}
 		posts[i].Categories = cats
+
+		images, err := getImagesForPost(db, posts[i].ID)
+		if err != nil {
+			return nil, err
+		}
+		posts[i].Images = images
 	}
 	return posts, nil
 }
@@ -290,8 +360,8 @@ func collectPosts(db *sql.DB, rows *sql.Rows) ([]models.Post, error) {
 // DeletePost deletes a post only if it belongs to userID (ownership is
 // enforced here, not just in the handler, so this function is safe to call
 // even if a handler-level check is ever skipped). Returns ErrNotFound if the
-// post doesn't exist or isn't owned by this user. Comments, reactions, and
-// category links cascade-delete via the schema's ON DELETE CASCADE.
+// post doesn't exist or isn't owned by this user. Comments, reactions,
+// category links, and images cascade-delete via the schema's ON DELETE CASCADE.
 func DeletePost(db *sql.DB, postID, userID int) error {
 	res, err := db.Exec(`DELETE FROM posts WHERE id = ? AND user_id = ?`, postID, userID)
 	if err != nil {

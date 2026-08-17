@@ -23,13 +23,40 @@
         {{end}}
     </p>
 
-    {{if .ImageURL}}
-    <img
-        src="{{.ImageURL}}"
-        alt="{{.Title}}"
-        class="post-image"
-    >
+{{if .Images}}
+{{$postID := .ID}}
+{{$total := len .Images}}
+<div class="gallery">
+    {{range $i, $img := .Images}}
+    <input type="radio" name="gallery-{{$postID}}" id="g-{{$postID}}-{{$i}}" class="gallery-radio" {{if eq $i 0}}checked{{end}}>
     {{end}}
+
+    <div class="gallery-track">
+        {{range $i, $img := .Images}}
+        <div class="gallery-slide">
+            <img src="{{$img}}" alt="{{$.Title}} image {{add $i 1}}" class="post-gallery-img">
+        </div>
+        {{end}}
+    </div>
+
+    {{if gt $total 1}}
+    <div class="gallery-controls">
+        {{range $i, $img := .Images}}
+            {{if gt $i 0}}
+<label for="g-{{$postID}}-{{add $i -1}}" class="gallery-arrow gallery-arrow-left arrow-for-{{add $i 1}}" aria-label="Previous image">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+</label>
+            {{end}}
+            {{if lt $i (add $total -1)}}
+            <label for="g-{{$postID}}-{{add $i 1}}" class="gallery-arrow gallery-arrow-right arrow-for-{{add $i 1}}" aria-label="Next image">›</label>
+            {{end}}
+        {{end}}
+    </div>
+    {{end}}
+</div>
+{{end}}
 
     <div class="content">
         {{.Content}}

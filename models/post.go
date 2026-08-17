@@ -8,9 +8,9 @@ type Post struct {
 	Title     string     `json:"title"`
 	GameTitle string     `json:"game_title"`
 	Content   string     `json:"content"`
-	ImageURL  string     `json:"image_url,omitempty"`
+	Images    []string   `json:"images,omitempty"` // ordered, replaces ImageURL
 	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at,omitempty"` // nil = never edited
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 
 	Username     string     `json:"username,omitempty"`
 	Categories   []Category `json:"categories,omitempty"`

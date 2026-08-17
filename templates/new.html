@@ -7,61 +7,41 @@
 
         <label>
             Title
-            <input
-                type="text"
-                name="title"
-                required
-                placeholder="Post title"
-            >
+            <input type="text" name="title" required placeholder="Post title">
         </label>
 
         <label>
             Game Title
-            <input
-                type="text"
-                name="game_title"
-                required
-                placeholder="Game title"
-            >
+            <input type="text" name="game_title" required placeholder="Game title">
         </label>
 
         <label>
             Content
-            <textarea
-                name="content"
-                required
-                placeholder="Write your post..."
-            ></textarea>
+            <textarea name="content" required placeholder="Write your post..."></textarea>
         </label>
 
         <label>
-            Image / GIF from your computer
-            <input
-                type="file"
-                name="image"
-                accept="image/*,.gif"
-            >
+            Images / GIFs from your computer
+            <input type="file" name="images" accept="image/*,.gif" multiple>
         </label>
+        <p class="hint">You can select multiple files at once (ctrl/cmd-click).</p>
 
-        <label>
-            Image / GIF URL
-            <input
-                type="url"
-                name="image_url"
-                placeholder="https://example.com/image.gif"
-            >
-        </label>
+        <div id="url-group">
+            <label>
+                Image URL
+                <input type="url" name="image_urls" placeholder="https://example.com/image.gif">
+            </label>
+        </div>
+
+        <button type="button" id="add-url-btn" class="btn-secondary small">
+            + Add another URL
+        </button>
 
         <fieldset>
             <legend>Categories</legend>
-
             {{range .Categories}}
             <label class="category-check">
-                <input
-                    type="checkbox"
-                    name="category_ids"
-                    value="{{.ID}}"
-                >
+                <input type="checkbox" name="category_ids" value="{{.ID}}">
                 {{.Name}}
             </label>
             {{end}}
@@ -69,16 +49,24 @@
 
         <label>
             New category (comma-separated, optional)
-            <input
-                type="text"
-                name="new_categories"
-                placeholder="e.g. Roguelike, Metroidvania"
-            >
+            <input type="text" name="new_categories" placeholder="e.g. Roguelike, Metroidvania">
         </label>
 
         <button type="submit">Create Post</button>
 
     </form>
 </div>
+
+<script>
+document.getElementById('add-url-btn').addEventListener('click', function () {
+    const group = document.getElementById('url-group');
+    const row = document.createElement('label');
+    row.innerHTML = `
+        Image URL
+        <input type="url" name="image_urls" placeholder="https://example.com/image.gif">
+    `;
+    group.appendChild(row);
+});
+</script>
 
 {{end}}
