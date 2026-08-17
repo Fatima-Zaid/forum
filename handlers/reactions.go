@@ -74,12 +74,12 @@ func reactionMessage(action database.ReactionAction, reactionType models.Reactio
 
 	switch action {
 	case database.ReactionRemoved:
-		return verb + " removed"
+		return verb + " Removed"
 	case database.ReactionAdded, database.ReactionChanged:
 		if reactionType == models.Like {
-			return "Post liked"
+			return "Post Liked"
 		}
-		return "Post disliked"
+		return "Post Disliked"
 	default:
 		return "Reaction updated"
 	}

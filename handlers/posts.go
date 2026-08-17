@@ -237,7 +237,7 @@ func EditPostHandler(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			http.Redirect(w, r, "/posts/"+idStr+"?success="+url.QueryEscape("Post updated successfully"), http.StatusSeeOther)
+			http.Redirect(w, r, "/posts/"+idStr+"?success="+url.QueryEscape("Post Updated Successfully"), http.StatusSeeOther)
 
 		default:
 			RenderError(w, r, http.StatusMethodNotAllowed, "Method Not Allowed")
@@ -394,7 +394,7 @@ func CreatePostHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		http.Redirect(w, r, "/posts/"+strconv.Itoa(postID)+"?success="+url.QueryEscape("Post created successfully"), http.StatusSeeOther)
+		http.Redirect(w, r, "/posts/"+strconv.Itoa(postID)+"?success="+url.QueryEscape("Post Created Successfully"), http.StatusSeeOther)
 	}
 }
 
@@ -426,7 +426,7 @@ func DeletePostHandler(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		http.Redirect(w, r, "/?success="+url.QueryEscape("Post deleted"), http.StatusSeeOther)
+		http.Redirect(w, r, "/?success="+url.QueryEscape("Post Deleted Successfully"), http.StatusSeeOther)
 	}
 }
 
