@@ -1,0 +1,83 @@
+{{define "content"}}
+
+<h1>My Profile</h1>
+
+<section class="post-detail profile-card">
+    <div class="profile-avatar-lg">
+        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="2" width="4" height="4" fill="var(--text-light)"/>
+            <rect x="4" y="7" width="8" height="6" fill="var(--text-light)"/>
+        </svg>
+    </div>
+
+    <div class="profile-info">
+        <p class="meta profile-username">{{.User.Username}}</p>
+        <p class="meta">{{.User.Email}}</p>
+        <p class="meta">Member since {{.User.CreatedAt.Format "Jan 2, 2006"}}</p>
+        <p class="meta">{{.PostCount}} post{{if ne .PostCount 1}}s{{end}}</p>
+    </div>
+</section>
+
+<section class="filters">
+    <a href="/?filter=created">My Posts</a>
+    <a href="/?filter=liked">Liked Posts</a>
+</section>
+
+<section class="post-list">
+    {{if not .Posts}}
+        <p>You haven't posted anything yet.</p>
+    {{end}}
+
+    {{range .Posts}}
+    <div class="post-card">
+        <a href="/posts/{{.ID}}" class="post-card-link">
+            <h3>{{.Title}}</h3>
+
+            {{if .GameTitle}}
+                <p class="game-title">{{.GameTitle}}</p>
+            {{end}}
+
+            <div class="post-thumb-wrap">
+                {{if .ImageURL}}
+                    <img src="{{.ImageURL}}" alt="{{.Title}}" class="post-thumb">
+                {{end}}
+            </div>
+
+            <p class="meta">
+                {{.CreatedAt.Format "Jan 2, 2006"}}
+                {{if .IsEdited}}
+                    · <span class="edited-badge">(edited)</span>
+                {{end}}
+            </p>
+
+            <p class="excerpt">{{.Content}}</p>
+
+            <p class="tags">
+                {{range .Categories}}
+                    <span class="tag">{{.Name}}</span>
+                {{end}}
+            </p>
+        </a>
+
+        <div class="reactions">
+            <span class="reaction-static">
+                <img
+                    src="/static/uploads/{{if eq .UserReaction "like"}}likeFilled.png{{else}}likeNotFilled.png{{end}}"
+                    alt="Like"
+                    class="reaction-icon"
+                >
+                {{.LikeCount}}
+                <span class="reaction-dot">·</span>
+                <img
+                    src="/static/uploads/{{if eq .UserReaction "dislike"}}dislikeFilled.png{{else}}dislikeNotFilled.png{{end}}"
+                    alt="Dislike"
+                    class="reaction-icon"
+                >
+                {{.DislikeCount}}
+            </span>
+        </div>
+    </div>
+    {{end}}
+</section>
+
+{{end}}

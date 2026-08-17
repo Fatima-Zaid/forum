@@ -10,12 +10,22 @@
 <body>
     <header>
         <nav>
-            <a href="/">Forum</a>
+            <a href="/" class="brand">Certified Noob Zone</a>
             {{if .User}}
-                <span>Welcome, {{.User.Username}}</span>
-                <form action="/logout" method="POST" style="display:inline">
-                    <button type="submit">Logout</button>
-                </form>
+                <details class="profile-menu">
+                    <summary class="profile-avatar-btn" aria-label="Profile menu">
+                        <svg class="avatar-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="6" y="2" width="4" height="4" fill="var(--text-light)"/>
+                            <rect x="4" y="7" width="8" height="6" fill="var(--text-light)"/>
+                        </svg>
+                    </summary>
+                    <div class="profile-dropdown">
+                        <a href="/profile">Profile</a>
+                        <form action="/logout" method="POST">
+                            <button type="submit">Logout</button>
+                        </form>
+                    </div>
+                </details>
             {{else}}
                 <a href="/login">Login</a>
                 <a href="/register">Register</a>
