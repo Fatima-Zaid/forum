@@ -36,22 +36,72 @@ func ReactToPostHandler(db *sql.DB) http.HandlerFunc {
 			http.Error(w, "invalid form data", http.StatusBadRequest)
 			return
 		}
+
 		reactionType := models.ReactionType(r.FormValue("type"))
 		if reactionType != models.Like && reactionType != models.Dislike {
 			http.Error(w, "type must be like or dislike", http.StatusBadRequest)
 			return
 		}
 
-		if err := database.SetPostReaction(db, postID, userID, reactionType); err != nil {
+		action, err := database.SetPostReaction(db, postID, userID, reactionType)
+		if err != nil {
 			http.Error(w, "could not save reaction", http.StatusInternalServerError)
 			return
 		}
 
-		msg := "Liked!"
-		if reactionType == models.Dislike {
-			msg = "Disliked!"
-		}
+		msg := reactionMessage(action, reactionType)
 
-		http.Redirect(w, r, "/posts/"+idStr+"?success="+url.QueryEscape(msg), http.StatusSeeOther)
+		// Check the Referer header to redirect the user back to the page they were on
+		redirectURL := r.Header.Get("Referer")
+		if redirectURL == "" {
+			redirectURL = "/posts/" + idStr
+		}
+		redirectURL = withFlash(redirectURL, "success", msg)
+
+		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 	}
+}
+
+// reactionMessage builds the toast text based on what actually happened to
+// the reaction (added / removed / changed), not just which button the user
+// clicked — clicking "like" on a post you already liked removes it, and the
+// message needs to reflect that instead of always saying "Post liked".
+func reactionMessage(action database.ReactionAction, reactionType models.ReactionType) string {
+	verb := "Like"
+	if reactionType == models.Dislike {
+		verb = "Dislike"
+	}
+
+	switch action {
+	case database.ReactionRemoved:
+		return verb + " removed"
+	case database.ReactionAdded, database.ReactionChanged:
+		if reactionType == models.Like {
+			return "Post liked"
+		}
+		return "Post disliked"
+	default:
+		return "Reaction updated"
+	}
+}
+
+// withFlash sets a flash query param on a URL, replacing any existing
+// success/error params rather than appending to them.
+func withFlash(rawURL, key, value string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		sep := "?"
+		if strings.Contains(rawURL, "?") {
+			sep = "&"
+		}
+		return rawURL + sep + key + "=" + url.QueryEscape(value)
+	}
+
+	q := u.Query()
+	q.Del("success")
+	q.Del("error")
+	q.Set(key, value)
+	u.RawQuery = q.Encode()
+
+	return u.String()
 }

@@ -2,7 +2,7 @@
 
 {{with .Post}}
 
-<div class="form-container">
+<div class="edit-post-form">
     <h1>Edit Post</h1>
 
     <form
@@ -38,35 +38,57 @@
             >{{.Content}}</textarea>
         </label>
 
-        <label>
-            Image / GIF from your computer
-            <input
-                type="file"
-                name="image"
-                accept="image/*,.gif"
-            >
-        </label>
+        {{if .Images}}
+        <p>Current images (click × to remove, or replace below):</p>
+        <div class="post-thumb-gallery">
+            {{range $i, $img := .Images}}
+            <div class="post-thumb-item">
+                <input
+                    type="checkbox"
+                    name="remove_images"
+                    value="{{$img}}"
+                    id="remove-img-{{$i}}"
+                    class="remove-thumb-toggle"
+                >
+                <img
+                    src="{{$img}}"
+                    alt="{{$.Post.Title}}"
+                    class="post-thumb"
+                >
+                <label for="remove-img-{{$i}}" class="remove-thumb-x" aria-label="Remove this image"></label>
+                <span class="remove-thumb-overlay">Removed</span>
 
-        <label>
-            Image / GIF URL
-            <input
-                type="url"
-                name="image_url"
-                placeholder="https://example.com/image.gif"
-            >
-        </label>
-
-        {{if .ImageURL}}
-        <p>
-            Current image:
-            <br>
-            <img
-                src="{{.ImageURL}}"
-                alt="{{.Title}}"
-                class="post-thumb"
-            >
-        </p>
+                <div class="thumb-replace">
+                    <label class="thumb-replace-label">
+                        <span>File</span>
+                        <input type="file" name="replace_file_{{$i}}" accept="image/*,.gif">
+                    </label>
+                    <label class="thumb-replace-label">
+                        <span>URL</span>
+                        <input type="url" name="replace_url_{{$i}}" placeholder="https://example.com/image.gif">
+                    </label>
+                </div>
+            </div>
+            {{end}}
+        </div>
         {{end}}
+
+        <label>
+            Add images / GIFs from your computer
+            <input type="file" name="images" accept="image/*,.gif" multiple>
+        </label>
+        <p class="hint">You can select multiple files at once (ctrl/cmd-click).</p>
+
+        <div id="url-group">
+            <label>
+                Add image URL
+                <input type="url" name="image_urls" placeholder="https://example.com/image.gif">
+            </label>
+        </div>
+
+        <button type="button" id="add-url-btn" class="btn-secondary small">
+            + Add another URL
+        </button>
 
         <fieldset>
             <legend>Categories</legend>
@@ -97,6 +119,18 @@
 
     </form>
 </div>
+
+<script>
+document.getElementById('add-url-btn').addEventListener('click', function () {
+    const group = document.getElementById('url-group');
+    const row = document.createElement('label');
+    row.innerHTML = `
+        Add image URL
+        <input type="url" name="image_urls" placeholder="https://example.com/image.gif">
+    `;
+    group.appendChild(row);
+});
+</script>
 
 {{end}}
 

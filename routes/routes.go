@@ -42,6 +42,9 @@ func RegisterRoutes(mux *http.ServeMux, db *sql.DB) {
 	mux.HandleFunc("/register", registerRouter)
 	mux.HandleFunc("/login", loginRouter)
 	mux.HandleFunc("/logout", handlers.LogoutHandler)
+
+	// Profile 
+	mux.HandleFunc("/profile", handlers.ProfilePageHandler(db))
 }
 
 // postsSubrouter dispatches everything under /posts/.

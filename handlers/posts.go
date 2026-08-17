@@ -148,6 +148,45 @@ func EditPostHandler(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
+			// Images/URLs checked off in the "remove" checkboxes on the edit
+			// form. Values are the raw image_url strings (see edit.html),
+			// scoped to this post in the DB layer so a crafted request can't
+			// delete another post's image rows.
+			removeImages := r.Form["remove_images"]
+
+
+			// Per-slot replacements: edit.html renders, for each existing
+			// image at index i, a hidden field replace_old_i holding that
+			// image's current URL, plus replace_file_i / replace_url_i for
+			// the new file/URL to swap in. We pair them up here.
+			var replaceImages []database.ImageReplacement
+			for i, oldURL := range post.Images {
+				oldURL = strings.TrimSpace(oldURL)
+				if oldURL == "" {
+					continue
+				}
+				fieldSuffix := "_" + strconv.Itoa(i)
+
+				var newURL string
+				if uploaded, err := saveUploadedImages(r, "replace_file"+fieldSuffix, "posts"); err == nil && len(uploaded) > 0 {
+					newURL = uploaded[0]
+				} else if err != nil {
+					redirectWithError(w, r, "/posts/"+idStr+"/edit", err.Error())
+					return
+				}
+				if newURL == "" {
+					if u := strings.TrimSpace(r.FormValue("replace_url" + fieldSuffix)); u != "" {
+						newURL = u
+					}
+				}
+				if newURL != "" {
+					replaceImages = append(replaceImages, database.ImageReplacement{
+						OldURL: oldURL,
+						NewURL: newURL,
+					})
+				}
+			}
+
 			uploaded, err := saveUploadedImages(r, "images", "posts")
 			if err != nil {
 				redirectWithError(w, r, "/posts/"+idStr+"/edit", err.Error())
@@ -192,7 +231,7 @@ func EditPostHandler(db *sql.DB) http.HandlerFunc {
 				return
 			}
 
-			if err := database.UpdatePost(db, id, userID, title, gameTitle, content, images, categoryIDs); err != nil {
+			if err := database.UpdatePost(db, id, userID, title, gameTitle, content, images, replaceImages, removeImages, categoryIDs); err != nil {
 				log.Println("edit: update post error:", err)
 				RenderError(w, r, http.StatusInternalServerError, "Could not update post")
 				return
@@ -220,10 +259,6 @@ func redirectWithError(w http.ResponseWriter, r *http.Request, path, msg string)
 	http.Redirect(w, r, path+"?error="+url.QueryEscape(msg), http.StatusSeeOther)
 }
 
-// saveUploadedImages saves every file under the given multipart field name
-// (e.g. "images", submitted via <input type="file" multiple>) and returns
-// their public URLs in the order they were uploaded. Returns an empty slice
-// (not an error) if no files were selected.
 func saveUploadedImages(r *http.Request, field, subdir string) ([]string, error) {
 	if r.MultipartForm == nil {
 		return nil, nil

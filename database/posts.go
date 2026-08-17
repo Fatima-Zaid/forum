@@ -51,12 +51,77 @@ func CreatePost(db *sql.DB, userID int, title, gameTitle, content string, images
 	return postID, nil
 }
 
-// UpdatePost overwrites an existing post owned by userID. newImages are
-// APPENDED after whatever images the post already has — pass nil/empty to
-// leave the existing gallery untouched. (Once edit.html supports removing
-// individual images, this is the place to add a "replace entirely" path.)
+// ImageReplacement pairs an existing image's current URL with the URL it
+// should be replaced by, so a specific gallery slot can be swapped in place
+// (same position) instead of removed-and-appended.
+type ImageReplacement struct {
+	OldURL string
+	NewURL string
+}
+
+// deletePostImagesTx removes specific images from a post by URL, scoped to
+// postID so a crafted request can't delete another post's rows by guessing
+// URLs. Must run inside tx so it rolls back together with the rest of the
+// update. Silently no-ops on a URL that doesn't match any row.
+func deletePostImagesTx(tx *sql.Tx, postID int, imageURLs []string) error {
+	if len(imageURLs) == 0 {
+		return nil
+	}
+	stmt, err := tx.Prepare(`DELETE FROM post_images WHERE post_id = ? AND image_url = ?`)
+	if err != nil {
+		return fmt.Errorf("prepare delete image: %w", err)
+	}
+	defer stmt.Close()
+
+	for _, url := range imageURLs {
+		if url == "" {
+			continue
+		}
+		if _, err := stmt.Exec(postID, url); err != nil {
+			return fmt.Errorf("delete image %q: %w", url, err)
+		}
+	}
+	return nil
+}
+
+// replacePostImagesTx swaps specific images in place: the row matching
+// (postID, OldURL) gets its image_url updated to NewURL, keeping the same
+// position — so the new image lands in the same gallery slot instead of
+// being appended at the end. Must run inside tx. No-ops if OldURL isn't
+// found or NewURL is empty (nothing to replace with).
+func replacePostImagesTx(tx *sql.Tx, postID int, replacements []ImageReplacement) error {
+	if len(replacements) == 0 {
+		return nil
+	}
+	stmt, err := tx.Prepare(
+		`UPDATE post_images SET image_url = ? WHERE post_id = ? AND image_url = ?`,
+	)
+	if err != nil {
+		return fmt.Errorf("prepare replace image: %w", err)
+	}
+	defer stmt.Close()
+
+	for _, rep := range replacements {
+		if rep.OldURL == "" || rep.NewURL == "" {
+			continue
+		}
+		if _, err := stmt.Exec(rep.NewURL, postID, rep.OldURL); err != nil {
+			return fmt.Errorf("replace image %q -> %q: %w", rep.OldURL, rep.NewURL, err)
+		}
+	}
+	return nil
+}
+
+// UpdatePost overwrites an existing post owned by userID.
+//   - replaceImages swaps specific existing images in place (same slot/position).
+//   - removeImages deletes specific existing images outright.
+//     If a URL appears in both, removal wins (it's deleted after any replace
+//     attempt, so the replace becomes a no-op for that slot).
+//   - newImages are brand-new images, APPENDED after whatever remains.
+//
+// Pass nil/empty for any of the three to leave that aspect untouched.
 // Returns ErrNotFound if the post doesn't exist or isn't owned by this user.
-func UpdatePost(db *sql.DB, postID, userID int, title, gameTitle, content string, newImages []string, categoryIDs []int) error {
+func UpdatePost(db *sql.DB, postID, userID int, title, gameTitle, content string, newImages []string, replaceImages []ImageReplacement, removeImages []string, categoryIDs []int) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
@@ -77,6 +142,16 @@ func UpdatePost(db *sql.DB, postID, userID int, title, gameTitle, content string
 	}
 	if affected == 0 {
 		return ErrNotFound // wrong owner, or post doesn't exist
+	}
+
+	// Replace in-place first, then remove — so a slot marked both "replace"
+	// and "remove" (shouldn't normally happen from the form, but be safe)
+	// ends up removed, not replaced.
+	if err := replacePostImagesTx(tx, postID, replaceImages); err != nil {
+		return err
+	}
+	if err := deletePostImagesTx(tx, postID, removeImages); err != nil {
+		return err
 	}
 
 	if len(newImages) > 0 {
@@ -398,4 +473,22 @@ func getCategoriesForPost(db *sql.DB, postID int) ([]models.Category, error) {
 		cats = append(cats, c)
 	}
 	return cats, rows.Err()
+}
+
+func ApplyUserReactions(db *sql.DB, userID int, posts []models.Post) error {
+	for i := range posts {
+		var reactionType string
+		err := db.QueryRow(
+			`SELECT type FROM post_reactions WHERE post_id = ? AND user_id = ?`,
+			posts[i].ID, userID,
+		).Scan(&reactionType)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				continue // no reaction from this user — leave UserReaction as ""
+			}
+			return fmt.Errorf("get user reaction for post %d: %w", posts[i].ID, err)
+		}
+		posts[i].UserReaction = reactionType
+	}
+	return nil
 }

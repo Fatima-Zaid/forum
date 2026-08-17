@@ -1,7 +1,8 @@
 {{define "content"}}
 
 {{if .IsLoggedIn}}
-<section class="new-post-cta">
+<section class="dashboard-bar">
+    <span class="welcome-text">Welcome, {{.User.Username}}</span>
     <a href="/posts/new" class="btn btn-primary">Create / Add Post</a>
 </section>
 {{end}}
@@ -24,54 +25,78 @@
         <p>No posts here yet.</p>
     {{end}}
 
-    {{range .Posts}}
-    <div class="post-card">
-        <a href="/posts/{{.ID}}" class="post-card-link">
-            <h3>{{.Title}}</h3>
+{{range .Posts}}
+<div class="post-card">
+    
+    <!-- Link ONLY wraps title, images, excerpt, and tags -->
+    <a href="/posts/{{.ID}}" class="post-card-clickable-area">
+        <h3>{{.Title}}</h3>
 
-            {{if .GameTitle}}
-                <p class="game-title">{{.GameTitle}}</p>
+        {{if .GameTitle}}
+            <p class="game-title">{{.GameTitle}}</p>
+        {{end}}
+
+        <div class="post-thumb-wrap">
+            {{if .Images}}
+                <img src="{{index .Images 0}}" alt="{{.Title}}" class="post-thumb">
             {{end}}
-
-<div class="post-thumb-wrap">
-    {{if .Images}}
-        <img src="{{index .Images 0}}" alt="{{.Title}}" class="post-thumb">
-    {{end}}
-</div>
-
-            <p class="meta">
-                by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
-                {{if .IsEdited}}
-                    · <span class="edited-badge">(edited)</span>
-                {{end}}
-            </p>
-
-            <p class="excerpt">{{.Content}}</p>
-
-            <p class="tags">
-                {{range .Categories}}
-                    <span class="tag">{{.Name}}</span>
-                {{end}}
-            </p>
-        </a>
-
-        <div class="reactions">
-            {{if $.IsLoggedIn}}
-            <form action="/posts/{{.ID}}/react" method="post" class="inline-form">
-                <input type="hidden" name="type" value="like">
-                <button type="submit">👍 {{.LikeCount}}</button>
-            </form>
-            <form action="/posts/{{.ID}}/react" method="post" class="inline-form">
-                <input type="hidden" name="type" value="dislike">
-                <button type="submit">👎 {{.DislikeCount}}</button>
-            </form>
-            {{else}}
-            <span>👍 {{.LikeCount}} · 👎 {{.DislikeCount}}</span>
-            {{end}}
-            · 💬 {{.CommentCount}}
         </div>
+
+        <p class="meta">
+            by {{.Username}} · {{.CreatedAt.Format "Jan 2, 2006"}}
+            {{if .IsEdited}}
+                · <span class="edited-badge">(edited)</span>
+            {{end}}
+        </p>
+
+        <p class="excerpt">{{.Content}}</p>
+
+        <p class="tags">
+            {{range .Categories}}
+                <span class="tag">{{.Name}}</span>
+            {{end}}
+        </p>
+    </a> <!-- Link ends BEFORE reactions start -->
+
+    <!-- Reactions are completely outside the anchor tag -->
+    <div class="reactions">
+        {{if $.IsLoggedIn}}
+        <form action="/posts/{{.ID}}/react" method="post" class="inline-form">
+            <input type="hidden" name="type" value="like">
+            <button type="submit" class="reaction-btn {{if eq .UserReaction "like"}}active{{end}}">
+                <img
+                    src="/static/uploads/{{if eq .UserReaction "like"}}likeFilled.png{{else}}likeNotFilled.png{{end}}"
+                    alt="Like"
+                    class="reaction-icon"
+                >
+                <span class="reaction-count">{{.LikeCount}}</span>
+            </button>
+        </form>
+        <form action="/posts/{{.ID}}/react" method="post" class="inline-form">
+            <input type="hidden" name="type" value="dislike">
+            <button type="submit" class="reaction-btn {{if eq .UserReaction "dislike"}}active{{end}}">
+                <img
+                    src="/static/uploads/{{if eq .UserReaction "dislike"}}dislikeFilled.png{{else}}dislikeNotFilled.png{{end}}"
+                    alt="Dislike"
+                    class="reaction-icon"
+                >
+                <span class="reaction-count">{{.DislikeCount}}</span>
+            </button>
+        </form>
+        {{else}}
+        <span class="reaction-static">
+            <img src="/static/uploads/{{if eq .UserReaction "like"}}likeFilled.png{{else}}likeNotFilled.png{{end}}" alt="Like" class="reaction-icon">
+            {{.LikeCount}}
+            <span class="reaction-dot">·</span>
+            <img src="/static/uploads/{{if eq .UserReaction "dislike"}}dislikeFilled.png{{else}}dislikeNotFilled.png{{end}}" alt="Dislike" class="reaction-icon">
+            {{.DislikeCount}}
+        </span>
+        {{end}}
+        · <img src="/static/uploads/comment.png" alt="comments" class="icon-comment"> {{.CommentCount}}
     </div>
-    {{end}}
+
+</div>
+{{end}}
 </section>
 
 {{end}}

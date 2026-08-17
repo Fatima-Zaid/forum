@@ -73,8 +73,13 @@
             class="inline-form"
         >
             <input type="hidden" name="type" value="like">
-            <button type="submit">
-                👍 {{.LikeCount}}
+            <button type="submit" class="reaction-btn {{if eq .UserReaction "like"}}active{{end}}">
+                <img
+                    src="/static/uploads/{{if eq .UserReaction "like"}}likeFilled.png{{else}}likeNotFilled.png{{end}}"
+                    alt="Like"
+                    class="reaction-icon"
+                >
+                <span class="reaction-count">{{.LikeCount}}</span>
             </button>
         </form>
 
@@ -84,15 +89,32 @@
             class="inline-form"
         >
             <input type="hidden" name="type" value="dislike">
-            <button type="submit">
-                👎 {{.DislikeCount}}
+            <button type="submit" class="reaction-btn {{if eq .UserReaction "dislike"}}active{{end}}">
+                <img
+                    src="/static/uploads/{{if eq .UserReaction "dislike"}}dislikeFilled.png{{else}}dislikeNotFilled.png{{end}}"
+                    alt="Dislike"
+                    class="reaction-icon"
+                >
+                <span class="reaction-count">{{.DislikeCount}}</span>
             </button>
         </form>
 
         {{else}}
 
-        <span>
-            👍 {{.LikeCount}} · 👎 {{.DislikeCount}}
+        <span class="reaction-static">
+            <img
+                src="/static/uploads/{{if eq .UserReaction "like"}}likeFilled.png{{else}}likeNotFilled.png{{end}}"
+                alt="Like"
+                class="reaction-icon"
+            >
+            {{.LikeCount}}
+            <span class="reaction-dot">·</span>
+            <img
+                src="/static/uploads/{{if eq .UserReaction "dislike"}}dislikeFilled.png{{else}}dislikeNotFilled.png{{end}}"
+                alt="Dislike"
+                class="reaction-icon"
+            >
+            {{.DislikeCount}}
         </span>
 
         {{end}}

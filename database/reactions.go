@@ -9,9 +9,17 @@ import (
 )
 
 
-func SetPostReaction(db *sql.DB, postID, userID int, reactionType models.ReactionType) error {
+type ReactionAction string
+
+const (
+	ReactionAdded   ReactionAction = "added"
+	ReactionRemoved ReactionAction = "removed"
+	ReactionChanged ReactionAction = "changed"
+)
+
+func SetPostReaction(db *sql.DB, postID, userID int, reactionType models.ReactionType) (ReactionAction, error) {
 	if reactionType != models.Like && reactionType != models.Dislike {
-		return fmt.Errorf("invalid reaction type %q", reactionType)
+		return "", fmt.Errorf("invalid reaction type %q", reactionType)
 	}
 
 	var existing models.ReactionType
@@ -27,26 +35,26 @@ func SetPostReaction(db *sql.DB, postID, userID int, reactionType models.Reactio
 			postID, userID, reactionType,
 		)
 		if err != nil {
-			return fmt.Errorf("insert post reaction: %w", err)
+			return "", fmt.Errorf("insert post reaction: %w", err)
 		}
-		return nil
+		return ReactionAdded, nil
 	case err != nil:
-		return fmt.Errorf("check post reaction: %w", err)
+		return "", fmt.Errorf("check post reaction: %w", err)
 	case existing == reactionType:
 		_, err = db.Exec(`DELETE FROM post_reactions WHERE post_id = ? AND user_id = ?`, postID, userID)
 		if err != nil {
-			return fmt.Errorf("remove post reaction: %w", err)
+			return "", fmt.Errorf("remove post reaction: %w", err)
 		}
-		return nil
+		return ReactionRemoved, nil
 	default:
 		_, err = db.Exec(
 			`UPDATE post_reactions SET type = ? WHERE post_id = ? AND user_id = ?`,
 			reactionType, postID, userID,
 		)
 		if err != nil {
-			return fmt.Errorf("update post reaction: %w", err)
+			return "", fmt.Errorf("update post reaction: %w", err)
 		}
-		return nil
+		return ReactionChanged, nil
 	}
 }
 
