@@ -1620,3 +1620,11 @@ main strong {
   font-size: 13px !important;
   color: var(--titlebar-2) !important;
 }
+
+/* Remove the underline from EVERYTHING inside the clickable post,
+   including nested <a> tags which carry their own underline from
+   the browser default and can override inherited text-decoration: none. */
+.post-card-clickable-area,
+.post-card-clickable-area * {
+    text-decoration: none !important;
+}
